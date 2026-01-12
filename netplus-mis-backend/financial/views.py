@@ -11,6 +11,97 @@ from .serializers import (
 )
 
 
+# 더미 데이터 헬퍼 함수
+def get_dummy_financial_statements():
+    """재무제표 더미 데이터"""
+    return [
+        {
+            'id': 1,
+            'statement_type': 'income',
+            'fiscal_year': 2024,
+            'fiscal_month': 12,
+            'revenue': 152000000000,
+            'cost_of_sales': 98000000000,
+            'gross_profit': 54000000000,
+            'sga': 32000000000,
+            'operating_profit': 12000000000,
+            'non_operating_income': 800000000,
+            'net_income': 9500000000,
+        },
+        {
+            'id': 2,
+            'statement_type': 'income',
+            'fiscal_year': 2024,
+            'fiscal_month': 11,
+            'revenue': 145000000000,
+            'cost_of_sales': 93000000000,
+            'gross_profit': 52000000000,
+            'sga': 31000000000,
+            'operating_profit': 11000000000,
+            'non_operating_income': 700000000,
+            'net_income': 8800000000,
+        },
+        {
+            'id': 3,
+            'statement_type': 'balance',
+            'fiscal_year': 2024,
+            'fiscal_month': 12,
+            'total_assets': 185000000000,
+            'current_assets': 95000000000,
+            'non_current_assets': 90000000000,
+            'total_liabilities': 75000000000,
+            'current_liabilities': 42000000000,
+            'non_current_liabilities': 33000000000,
+            'total_equity': 110000000000,
+        },
+    ]
+
+
+def get_dummy_financial_ratios():
+    """재무비율 더미 데이터"""
+    return [
+        {
+            'id': 1,
+            'fiscal_year': 2024,
+            'fiscal_month': 12,
+            'current_ratio': 156.8,
+            'quick_ratio': 98.5,
+            'debt_to_equity': 45.2,
+            'roe': 12.5,
+            'roa': 8.3,
+            'operating_margin': 8.0,
+            'net_margin': 6.3,
+            'revenue_growth': 8.5,
+        },
+        {
+            'id': 2,
+            'fiscal_year': 2024,
+            'fiscal_month': 11,
+            'current_ratio': 158.2,
+            'quick_ratio': 99.1,
+            'debt_to_equity': 46.5,
+            'roe': 11.8,
+            'roa': 7.9,
+            'operating_margin': 7.8,
+            'net_margin': 6.1,
+            'revenue_growth': 7.2,
+        },
+        {
+            'id': 3,
+            'fiscal_year': 2024,
+            'fiscal_month': 10,
+            'current_ratio': 154.5,
+            'quick_ratio': 97.2,
+            'debt_to_equity': 47.1,
+            'roe': 11.2,
+            'roa': 7.5,
+            'operating_margin': 7.5,
+            'net_margin': 5.8,
+            'revenue_growth': 6.8,
+        },
+    ]
+
+
 class FinancialStatementViewSet(viewsets.ModelViewSet):
     """재무제표 ViewSet"""
     queryset = FinancialStatement.objects.all()
@@ -19,34 +110,61 @@ class FinancialStatementViewSet(viewsets.ModelViewSet):
     search_fields = ['statement_type']
     ordering_fields = ['fiscal_year', 'fiscal_month', 'revenue', 'net_income']
     ordering = ['-fiscal_year', '-fiscal_month']
-    
+
     def get_serializer_class(self):
         """액션에 따라 다른 시리얼라이저 사용"""
         if self.action == 'list':
             return FinancialStatementListSerializer
         return FinancialStatementSerializer
-    
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_financial_statements())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """재무 요약 정보"""
         year = request.query_params.get('year')
-        
+
         if not year:
             return Response(
                 {'error': '연도(year) 파라미터가 필요합니다.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         statements = self.queryset.filter(fiscal_year=year)
-        
+
+        if not statements.exists():
+            # 더미 데이터로 요약 반환
+            dummy_data = get_dummy_financial_statements()
+            year_statements = [s for s in dummy_data if s['fiscal_year'] == int(year)]
+
+            income_statements = [s for s in year_statements if s['statement_type'] == 'income']
+            total_revenue = sum([s['revenue'] for s in income_statements])
+            total_net_income = sum([s['net_income'] for s in income_statements])
+
+            balance_statements = [s for s in year_statements if s['statement_type'] == 'balance']
+            latest_balance = balance_statements[0] if balance_statements else {}
+
+            return Response({
+                'fiscal_year': year,
+                'total_revenue': total_revenue,
+                'total_net_income': total_net_income,
+                'total_assets': latest_balance.get('total_assets', 0),
+                'total_liabilities': latest_balance.get('total_liabilities', 0),
+                'total_equity': latest_balance.get('total_equity', 0),
+            })
+
         # 손익계산서 데이터
         income_statements = statements.filter(statement_type='income')
         total_revenue = sum([s.revenue for s in income_statements])
         total_net_income = sum([s.net_income for s in income_statements])
-        
+
         # 최근 재무상태표
         latest_balance = statements.filter(statement_type='balance').first()
-        
+
         summary_data = {
             'fiscal_year': year,
             'total_revenue': total_revenue,
@@ -55,26 +173,33 @@ class FinancialStatementViewSet(viewsets.ModelViewSet):
             'total_liabilities': latest_balance.total_liabilities if latest_balance else 0,
             'total_equity': latest_balance.total_equity if latest_balance else 0,
         }
-        
+
         return Response(summary_data)
-    
+
     @action(detail=False, methods=['get'])
     def monthly_trend(self, request):
         """월별 재무 트렌드"""
         year = request.query_params.get('year')
         statement_type = request.query_params.get('type', 'income')
-        
+
         if not year:
             return Response(
                 {'error': '연도(year) 파라미터가 필요합니다.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         statements = self.queryset.filter(
             fiscal_year=year,
             statement_type=statement_type
         ).order_by('fiscal_month')
-        
+
+        if not statements.exists():
+            # 더미 데이터로 트렌드 반환
+            dummy_data = get_dummy_financial_statements()
+            filtered = [s for s in dummy_data
+                       if s['fiscal_year'] == int(year) and s['statement_type'] == statement_type]
+            return Response(filtered)
+
         serializer = self.get_serializer(statements, many=True)
         return Response(serializer.data)
 
@@ -86,28 +211,41 @@ class FinancialRatioViewSet(viewsets.ModelViewSet):
     filterset_fields = ['fiscal_year', 'fiscal_month']
     ordering_fields = ['fiscal_year', 'fiscal_month', 'roe', 'roa']
     ordering = ['-fiscal_year', '-fiscal_month']
-    
+
     def get_serializer_class(self):
         """액션에 따라 다른 시리얼라이저 사용"""
         if self.action == 'list':
             return FinancialRatioListSerializer
         return FinancialRatioSerializer
-    
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_financial_ratios())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def comparison(self, request):
         """연도별 비교"""
         year1 = request.query_params.get('year1')
         year2 = request.query_params.get('year2')
-        
+
         if not year1 or not year2:
             return Response(
                 {'error': 'year1, year2 파라미터가 필요합니다.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         ratios_year1 = self.queryset.filter(fiscal_year=year1)
         ratios_year2 = self.queryset.filter(fiscal_year=year2)
-        
+
+        if not ratios_year1.exists() and not ratios_year2.exists():
+            # 더미 데이터로 비교 반환
+            dummy_data = get_dummy_financial_ratios()
+            data1 = [d for d in dummy_data if d['fiscal_year'] == int(year1)]
+            data2 = [d for d in dummy_data if d['fiscal_year'] == int(year2)]
+            return Response({'year1': data1, 'year2': data2})
+
         return Response({
             'year1': FinancialRatioListSerializer(ratios_year1, many=True).data,
             'year2': FinancialRatioListSerializer(ratios_year2, many=True).data,

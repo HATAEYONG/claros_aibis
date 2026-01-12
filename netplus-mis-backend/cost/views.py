@@ -14,6 +14,60 @@ from .serializers import (
 )
 
 
+# 더미 데이터 헬퍼 함수
+def get_dummy_monthly_cost():
+    """월별 원가 더미 데이터"""
+    return [
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'total_cost': 98000000000, 'direct_material': 52000000000, 'direct_labor': 18000000000, 'overhead': 28000000000, 'unit_cost': 850},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'total_cost': 95000000000, 'direct_material': 50000000000, 'direct_labor': 17500000000, 'overhead': 27500000000, 'unit_cost': 830},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 10, 'total_cost': 92000000000, 'direct_material': 48500000000, 'direct_labor': 17000000000, 'overhead': 26500000000, 'unit_cost': 810},
+    ]
+
+
+def get_dummy_product_cost():
+    """제품별 원가 더미 데이터"""
+    return [
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-001', 'product_name': '타이레놀정', 'total_cost': 15000000000, 'unit_cost': 500, 'selling_price': 850, 'margin': 350, 'margin_rate': 41.18, 'production_volume': 30000000},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-002', 'product_name': '자일리톨정', 'total_cost': 12000000000, 'unit_cost': 480, 'selling_price': 780, 'margin': 300, 'margin_rate': 38.46, 'production_volume': 25000000},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-001', 'product_name': '미용크림', 'total_cost': 8000000000, 'unit_cost': 3200, 'selling_price': 5500, 'margin': 2300, 'margin_rate': 41.82, 'production_volume': 2500000},
+    ]
+
+
+def get_dummy_cost_projects():
+    """원가 절감 프로젝트 더미 데이터"""
+    return [
+        {'id': 1, 'project_id': 'CR-001', 'title': '자재비 절감', 'category': 'material', 'status': 'in-progress', 'progress': 65, 'target_saving': 5000000000, 'actual_saving': 3200000000},
+        {'id': 2, 'project_id': 'CR-002', 'title': '공정 최적화', 'category': 'process', 'status': 'completed', 'progress': 100, 'target_saving': 3000000000, 'actual_saving': 3500000000},
+        {'id': 3, 'project_id': 'CR-003', 'title': '설비 효율화', 'category': 'overhead', 'status': 'in-progress', 'progress': 45, 'target_saving': 2000000000, 'actual_saving': 850000000},
+    ]
+
+
+def get_dummy_cost_drivers():
+    """원가 동인 더미 데이터"""
+    return [
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '원료가격', 'driver_value': 125000000000, 'impact_rate': 45.2, 'change_rate': 3.5, 'trend': 'up'},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '인건비', 'driver_value': 45000000000, 'impact_rate': 16.8, 'change_rate': 2.1, 'trend': 'up'},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '에너지비', 'driver_value': 28000000000, 'impact_rate': 10.5, 'change_rate': -1.2, 'trend': 'down'},
+    ]
+
+
+def get_dummy_breakeven():
+    """손익분기점 더미 데이터"""
+    return [
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'fixed_cost': 45000000000, 'variable_cost_per_unit': 650, 'selling_price_per_unit': 850, 'breakeven_quantity': 225000, 'breakeven_amount': 191250000000, 'margin_of_safety': 28.5},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'fixed_cost': 44500000000, 'variable_cost_per_unit': 640, 'selling_price_per_unit': 845, 'breakeven_quantity': 223000, 'breakeven_amount': 188435000000, 'margin_of_safety': 27.8},
+    ]
+
+
+def get_dummy_cost_structure():
+    """원가 구조 더미 데이터"""
+    return [
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'direct_material', 'amount': 52000000000, 'ratio': 53.1},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'direct_labor', 'amount': 18000000000, 'ratio': 18.4},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'overhead', 'amount': 28000000000, 'ratio': 28.5},
+    ]
+
+
 class MonthlyCostViewSet(viewsets.ModelViewSet):
     """월별 원가 ViewSet"""
     queryset = MonthlyCost.objects.all()
@@ -25,6 +79,12 @@ class MonthlyCostViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return MonthlyCostListSerializer
         return MonthlyCostSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_monthly_cost())
+        return super().list(request, *args, **kwargs)
 
     @action(detail=False, methods=['get'])
     def trend(self, request):
@@ -38,6 +98,11 @@ class MonthlyCostViewSet(viewsets.ModelViewSet):
             )
 
         costs = self.queryset.filter(fiscal_year=year).order_by('fiscal_month')
+
+        if not costs.exists():
+            dummy = [d for d in get_dummy_monthly_cost() if d['fiscal_year'] == int(year)]
+            return Response(dummy)
+
         serializer = MonthlyCostSerializer(costs, many=True)
         return Response(serializer.data)
 
@@ -53,6 +118,15 @@ class MonthlyCostViewSet(viewsets.ModelViewSet):
             )
 
         costs = self.queryset.filter(fiscal_year=year)
+
+        if not costs.exists():
+            dummy = [d for d in get_dummy_monthly_cost() if d['fiscal_year'] == int(year)]
+            return Response({
+                'fiscal_year': year,
+                'total_cost': sum(d['total_cost'] for d in dummy),
+                'average_unit_cost': round(sum(d['unit_cost'] for d in dummy) / len(dummy), 2) if dummy else 0,
+                'month_count': len(dummy),
+            })
 
         total = sum([c.total_cost for c in costs])
         avg_unit = sum([c.unit_cost for c in costs]) / len(costs) if costs else 0
@@ -79,6 +153,12 @@ class ProductCostViewSet(viewsets.ModelViewSet):
             return ProductCostListSerializer
         return ProductCostSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_product_cost())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def comparison(self, request):
         """제품별 비교"""
@@ -90,6 +170,14 @@ class ProductCostViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(fiscal_year=year)
         if month:
             queryset = queryset.filter(fiscal_month=month)
+
+        if not queryset.exists():
+            dummy = get_dummy_product_cost()
+            if year:
+                dummy = [d for d in dummy if d['fiscal_year'] == int(year)]
+            if month:
+                dummy = [d for d in dummy if d['fiscal_month'] == int(month)]
+            return Response(dummy)
 
         serializer = ProductCostSerializer(queryset, many=True)
         return Response(serializer.data)
@@ -105,6 +193,12 @@ class ProductCostViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(fiscal_year=year)
         if month:
             queryset = queryset.filter(fiscal_month=month)
+
+        if not queryset.exists():
+            dummy = get_dummy_product_cost()
+            products = sorted(dummy, key=lambda x: x['margin_rate'], reverse=True)
+            data = [{'product_name': p['product_name'], 'margin_rate': p['margin_rate'], 'margin': p['margin'], 'total_cost': p['total_cost']} for p in products]
+            return Response(data)
 
         products = queryset.order_by('-margin_rate')
         data = [
@@ -133,28 +227,50 @@ class CostReductionProjectViewSet(viewsets.ModelViewSet):
             return CostReductionProjectListSerializer
         return CostReductionProjectSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_cost_projects())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def in_progress(self, request):
         """진행 중인 프로젝트"""
-        projects = self.queryset.filter(status='in-progress')
+        queryset = self.queryset
+
+        if not queryset.exists():
+            dummy = [d for d in get_dummy_cost_projects() if d['status'] == 'in-progress']
+            return Response(dummy)
+
+        projects = queryset.filter(status='in-progress')
         serializer = CostReductionProjectSerializer(projects, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """절감 요약"""
-        projects = self.queryset.all()
+        queryset = self.queryset
 
-        total_target = sum([p.target_saving for p in projects])
-        total_actual = sum([p.actual_saving for p in projects])
+        if not queryset.exists():
+            dummy = get_dummy_cost_projects()
+            return Response({
+                'total_target_saving': sum(d['target_saving'] for d in dummy),
+                'total_actual_saving': sum(d['actual_saving'] for d in dummy),
+                'achievement_rate': round(sum(d['actual_saving'] for d in dummy) / sum(d['target_saving'] for d in dummy) * 100, 1),
+                'project_count': len(dummy),
+                'completed_count': len([d for d in dummy if d['status'] == 'completed']),
+            })
+
+        total_target = sum([p.target_saving for p in queryset])
+        total_actual = sum([p.actual_saving for p in queryset])
         achievement = (total_actual / total_target * 100) if total_target else 0
 
         return Response({
             'total_target_saving': total_target,
             'total_actual_saving': total_actual,
             'achievement_rate': round(achievement, 1),
-            'project_count': projects.count(),
-            'completed_count': projects.filter(status='completed').count(),
+            'project_count': queryset.count(),
+            'completed_count': queryset.filter(status='completed').count(),
         })
 
 
@@ -168,6 +284,12 @@ class CostDriverViewSet(viewsets.ModelViewSet):
     ordering_fields = ['impact_rate', 'change_rate']
     ordering = ['-fiscal_year', '-fiscal_month', '-impact_rate']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_cost_drivers())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def analysis(self, request):
         """동인 분석"""
@@ -179,6 +301,14 @@ class CostDriverViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(fiscal_year=year)
         if month:
             queryset = queryset.filter(fiscal_month=month)
+
+        if not queryset.exists():
+            dummy = sorted(get_dummy_cost_drivers(), key=lambda x: x['impact_rate'], reverse=True)
+            if year:
+                dummy = [d for d in dummy if d['fiscal_year'] == int(year)]
+            if month:
+                dummy = [d for d in dummy if d['fiscal_month'] == int(month)]
+            return Response(dummy)
 
         drivers = queryset.order_by('-impact_rate')
         serializer = CostDriverSerializer(drivers, many=True)
@@ -193,6 +323,12 @@ class BreakEvenAnalysisViewSet(viewsets.ModelViewSet):
     filterset_fields = ['fiscal_year', 'fiscal_month']
     ordering = ['-fiscal_year', '-fiscal_month']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_breakeven())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def latest(self, request):
         """최신 분석"""
@@ -201,6 +337,12 @@ class BreakEvenAnalysisViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
         if year:
             queryset = queryset.filter(fiscal_year=year)
+
+        if not queryset.exists():
+            dummy = [d for d in get_dummy_breakeven() if not year or d['fiscal_year'] == int(year)]
+            if dummy:
+                return Response(dummy[0])
+            return Response({'error': '데이터가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
         latest = queryset.first()
         if not latest:
@@ -218,6 +360,10 @@ class BreakEvenAnalysisViewSet(viewsets.ModelViewSet):
         if year:
             queryset = queryset.filter(fiscal_year=year)
 
+        if not queryset.exists():
+            dummy = [d for d in get_dummy_breakeven() if not year or d['fiscal_year'] == int(year)]
+            return Response(dummy)
+
         analyses = queryset.order_by('fiscal_month')
         serializer = BreakEvenAnalysisSerializer(analyses, many=True)
         return Response(serializer.data)
@@ -231,6 +377,12 @@ class CostStructureViewSet(viewsets.ModelViewSet):
     filterset_fields = ['fiscal_year', 'fiscal_month', 'cost_type']
     ordering = ['-fiscal_year', '-fiscal_month']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_cost_structure())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def breakdown(self, request):
         """원가 구조 분석"""
@@ -242,6 +394,14 @@ class CostStructureViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(fiscal_year=year)
         if month:
             queryset = queryset.filter(fiscal_month=month)
+
+        if not queryset.exists():
+            dummy = get_dummy_cost_structure()
+            if year:
+                dummy = [d for d in dummy if d['fiscal_year'] == int(year)]
+            if month:
+                dummy = [d for d in dummy if d['fiscal_month'] == int(month)]
+            return Response(dummy)
 
         serializer = CostStructureSerializer(queryset, many=True)
         return Response(serializer.data)
