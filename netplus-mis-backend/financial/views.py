@@ -54,6 +54,36 @@ def get_dummy_financial_statements():
             'non_current_liabilities': 33000000000,
             'total_equity': 110000000000,
         },
+        {
+            'id': 4,
+            'statement_type': 'cashflow',
+            'fiscal_year': 2024,
+            'fiscal_month': 12,
+            'operating_cashflow': 12500000000,
+            'investing_cashflow': -8500000000,
+            'financing_cashflow': -3200000000,
+            'net_cashflow': 800000000,
+        },
+        {
+            'id': 5,
+            'statement_type': 'cashflow',
+            'fiscal_year': 2024,
+            'fiscal_month': 11,
+            'operating_cashflow': 11800000000,
+            'investing_cashflow': -7200000000,
+            'financing_cashflow': -2800000000,
+            'net_cashflow': 1800000000,
+        },
+        {
+            'id': 6,
+            'statement_type': 'cashflow',
+            'fiscal_year': 2024,
+            'fiscal_month': 10,
+            'operating_cashflow': 11200000000,
+            'investing_cashflow': -6800000000,
+            'financing_cashflow': -2500000000,
+            'net_cashflow': 1900000000,
+        },
     ]
 
 
