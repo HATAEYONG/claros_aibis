@@ -37,7 +37,7 @@ tmp_upload_dir = None
 # certfile = "/path/to/ssl/cert.pem"
 
 # Server mechanics
-preload_app = True
+preload_app = False
 sendfile = True
 reuse_port = True
 chdir = "/app"
