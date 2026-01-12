@@ -21,14 +21,13 @@ keepalive = 2
 proc_name = "netplus_mis"
 
 # Logging
-accesslog = "/var/log/netplus-mis/access.log"
-errorlog = "/var/log/netplus-mis/error.log"
+accesslog = "-"  # stdout
+errorlog = "-"   # stderr
 loglevel = "info"
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 # Process management
 daemon = False
-pidfile = "/var/run/netplus-mis/gunicorn.pid"
+pidfile = None
 user = None
 group = None
 tmp_upload_dir = None
@@ -41,4 +40,4 @@ tmp_upload_dir = None
 preload_app = True
 sendfile = True
 reuse_port = True
-chdir = "/var/www/netplus-mis/backend"
+chdir = "/app"
