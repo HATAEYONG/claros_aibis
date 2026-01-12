@@ -1,0 +1,80 @@
+# Docker Compose for NetPlus MIS-AI Dashboard
+# AWS Lightsail 배포용
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: netplus-postgres
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: netplus_mis
+      POSTGRES_USER: netplus_user
+      POSTGRES_PASSWORD: netplus_password_2024
+    networks:
+      - netplus-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netplus_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Backend
+  backend:
+    build:
+      context: ./netplus-mis-backend
+      dockerfile: Dockerfile
+    container_name: netplus-backend
+    restart: always
+    volumes:
+      - backend_static:/app/staticfiles
+      - backend_media:/app/media
+    environment:
+      DEBUG: False
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production-min-50-chars}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: netplus_mis
+      DB_USER: netplus_user
+      DB_PASSWORD: netplus_password_2024
+      DB_HOST: db
+      DB_PORT: 5432
+      CORS_ALLOW_ALL_ORIGINS: "False"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - netplus-network
+    ports:
+      - "8000:8000"
+
+  # React Frontend (with nginx)
+  frontend:
+    build:
+      context: ./netplus-mis-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    container_name: netplus-frontend
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - netplus-network
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  postgres_data:
+  backend_static:
+  backend_media:
+
+networks:
+  netplus-network:
+    driver: bridge

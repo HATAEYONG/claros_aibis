@@ -1,0 +1,231 @@
+import React from 'react';
+import KPICard from '@/components/common/KPICard';
+import ChartComponent from '@/components/common/ChartComponent';
+import { TrendingUp, TrendingDown } from 'lucide-react'; 
+import {
+  AlertIcon,
+  DollarIcon,
+  FactoryIcon,
+  TargetIcon,
+  PackageIcon,
+  TrendDownIcon,
+  ActivityIcon,
+  CheckIcon
+} from '@/components/icons/Icons';
+
+const Dashboard: React.FC = () => {
+  // ... 기존 코드 ...
+
+  return (
+    <div className="space-y-6">
+      {/* ... 기존 코드 ... */}
+
+      {/* 차트 그리드 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+            <TrendingUp className="text-blue-500" size={18}/> {/* TrendUpIcon → TrendingUp */}
+            월별 매출 추이
+          </h3>
+          {/* ... 나머지 코드 동일 ... */}
+
+const Dashboard: React.FC = () => {
+  const worstInventory = [
+    {code:'P-2458', day:'90일 초과', pct:'18%', amt:'12.5억', theme:'red'},
+    {code:'P-1523', day:'75일', pct:'14%', amt:'9.8억', theme:'orange'},
+    {code:'P-3421', day:'66일', pct:'12%', amt:'8.2억', theme:'yellow'},
+    {code:'P-5678', day:'62일', pct:'10%', amt:'6.5억', theme:'yellow'},
+    {code:'P-9012', day:'56일', pct:'8%', amt:'5.1억', theme:'blue'}
+  ];
+
+  const kpiData = [
+    {dept:'영업', metric:'매출예측정확도', target:'90%', prev:'88%', current:'98%', status:'양호'},
+    {dept:'개발', metric:'목표원가달성률', target:'100%', prev:'101%', current:'101%', status:'우수'},
+    {dept:'생산관리', metric:'운영CAPA가동률', target:'95%', prev:'97%', current:'102%', status:'우수'},
+    {dept:'구매', metric:'자재적기입고율', target:'95%', prev:'94%', current:'99%', status:'양호'},
+    {dept:'제조', metric:'당일계획당일완료', target:'95%', prev:'96%', current:'101%', status:'우수'},
+    {dept:'품질', metric:'종합수율', target:'95%', prev:'94%', current:'99%', status:'주의'}
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* 긴급 알림 */}
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg shadow-sm flex items-start gap-3">
+        <AlertIcon className="text-blue-600 mt-1 flex-shrink-0" />
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded">긴급</span>
+            <span className="text-xs text-gray-500">(10분 전)</span>
+          </div>
+          <p className="text-sm text-gray-700 font-medium">● P-2458 부진재고 90일 초과 (25일 전)</p>
+          <p className="text-sm text-gray-700 font-medium">● 원자재 입고 지연 예상 (Item-1234) (25일 전)</p>
+          <p className="text-sm text-gray-700 font-medium">● 당월 생산제품 95% 달성 (14건 전)</p>
+        </div>
+      </div>
+
+      {/* KPI 카드 - frontend-improved KPICard 사용 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard
+          title="매출 달성률"
+          value="95%"
+          subtitle="목표: 2,200억 | 실적: 2,100억"
+          changeRate={10}
+          trend="up"
+          color="blue"
+          icon={DollarIcon}
+        />
+        <KPICard
+          title="생산 달성률"
+          value="97.5%"
+          subtitle="목표: 95% | 실적: 97.5%"
+          changeRate={2.3}
+          trend="up"
+          color="green"
+          icon={FactoryIcon}
+        />
+        <KPICard
+          title="종합 수율"
+          value="94%"
+          subtitle="목표: 95% | 실적: 94%"
+          changeRate={-0.8}
+          trend="down"
+          color="yellow"
+          status="warning"
+          icon={TargetIcon}
+        />
+        <KPICard
+          title="재고 회전율"
+          value="8.2"
+          subtitle="목표: 8.0 | 실적: 8.2회"
+          changeRate={0.8}
+          trend="up"
+          color="purple"
+          icon={PackageIcon}
+        />
+      </div>
+
+      {/* 차트 그리드 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+            <TrendUpIcon className="text-blue-500" size={18}/> 월별 매출 추이
+          </h3>
+          <ChartComponent 
+            type="bar" 
+            data={{
+              labels:['8월','9월','10월'],
+              datasets:[
+                {label:'목표', data:[2000,1800,2200], backgroundColor:'rgba(147,197,253,0.8)'},
+                {label:'실적', data:[1700,1750,2100], backgroundColor:'rgba(59,130,246,0.8)'}
+              ]
+            }} 
+            options={{plugins:{legend:{position:'top'}}}}
+            height={256}
+          />
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+            <ActivityIcon className="text-purple-500" size={18}/> 재고 현황
+          </h3>
+          <ChartComponent 
+            type="line" 
+            data={{
+              labels:['8월','9월','10월'],
+              datasets:[
+                {label:'원자재', data:[180,195,180], borderColor:'#a855f7', backgroundColor:'rgba(168,85,247,0.1)', fill:true, tension:0.3},
+                {label:'재공품', data:[50,45,40], borderColor:'#c084fc', backgroundColor:'rgba(192,132,252,0.1)', fill:true, tension:0.3},
+                {label:'완제품', data:[90,85,95], borderColor:'#d8b4fe', backgroundColor:'rgba(216,180,254,0.1)', fill:true, tension:0.3}
+              ]
+            }} 
+            options={{plugins:{legend:{position:'top'}}}}
+            height={256}
+          />
+        </div>
+      </div>
+
+      {/* 두 번째 차트 그리드 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+            <CheckIcon className="text-green-500" size={18}/> 공정별 품질 수율
+          </h3>
+          <ChartComponent 
+            type="bar" 
+            data={{
+              labels:['전처리','코팅','건조','검사','포장'],
+              datasets:[
+                {label:'수율', data:[98,96,95,97,99], backgroundColor:'#4ade80'},
+                {label:'FPY', data:[97,94,93,96,98], backgroundColor:'#22c55e'}
+              ]
+            }} 
+            options={{scales:{y:{min:80, max:100}}}}
+            height={256}
+          />
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+          <h3 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+            <AlertIcon className="text-red-500" size={18}/> Worst 5 부진재고
+          </h3>
+          <div className="space-y-3">
+            {worstInventory.map((item, idx) => (
+              <div key={idx} className={`flex justify-between p-3 border rounded-lg bg-${item.theme}-50 border-${item.theme}-100`}>
+                <div>
+                  <p className="font-bold text-gray-800 text-sm">{item.code}</p>
+                  <p className="text-xs text-gray-500">{item.day}</p>
+                </div>
+                <div className="text-right">
+                  <p className={`font-bold text-sm text-${item.theme}-600`}>{item.pct}</p>
+                  <p className="text-xs text-gray-500">{item.amt}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* KPI 테이블 */}
+      <div className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
+        <div className="bg-blue-600 px-6 py-4">
+          <h3 className="text-white font-bold flex items-center gap-2">
+            <TargetIcon size={20}/> 부문별 핵심성과지표 (KPI)
+          </h3>
+          <p className="text-blue-100 text-xs mt-1">월간 목표 대비 실적 현황</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600 font-semibold border-b">
+              <tr>
+                <th className="py-3 px-4 text-left">부문</th>
+                <th className="py-3 px-4 text-left">지표명</th>
+                <th className="py-3 px-4 text-center">목표</th>
+                <th className="py-3 px-4 text-center">전월실적</th>
+                <th className="py-3 px-4 text-center">당월실적</th>
+                <th className="py-3 px-4 text-center">평가</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {kpiData.map((row, idx) => (
+                <tr key={idx} className="hover:bg-blue-50">
+                  <td className="py-3 px-4 font-medium">{row.dept}</td>
+                  <td className="py-3 px-4">{row.metric}</td>
+                  <td className="py-3 px-4 text-center">{row.target}</td>
+                  <td className="py-3 px-4 text-center">{row.prev}</td>
+                  <td className="py-3 px-4 text-center font-bold text-green-600">{row.current}</td>
+                  <td className="py-3 px-4 text-center">
+                    <span className={`px-2 py-1 ${row.status === '우수' ? 'bg-green-100 text-green-700' : row.status === '양호' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} text-xs rounded-full font-bold`}>
+                      {row.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
