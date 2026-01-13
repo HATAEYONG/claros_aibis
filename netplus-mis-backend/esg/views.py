@@ -38,7 +38,7 @@ def get_dummy_energy_consumption():
     return [
         {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'electricity', 'consumption': 450000, 'unit': 'kWh', 'cost': 54},
         {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'gas', 'consumption': 12000, 'unit': 'm3', 'cost': 18},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'water', 'consumption': 8500, 'unit': 'ton', 'cost': 8500000},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'water', 'consumption': 8500, 'unit': 'ton', 'cost': 85},
     ]
 
 

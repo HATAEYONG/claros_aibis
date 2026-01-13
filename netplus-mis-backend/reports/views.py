@@ -26,7 +26,7 @@ def get_dummy_executive_summary():
         'net_profit': 950, 'net_margin': 6.3,
         'total_assets': 18500, 'total_liabilities': 7500,
         'total_equity': 11000, 'employee_count': 850,
-        'production_volume': 12500000, 'quality_rate': 98.5,
+        'production_volume': 1250, 'quality_rate': 98.5,
         'summary': '2024년 12월 호실적 달성. 매출 8.5% 성장, 영업이익율 8.0% 유지.',
     }
 

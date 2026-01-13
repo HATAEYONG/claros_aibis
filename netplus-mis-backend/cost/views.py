@@ -27,9 +27,9 @@ def get_dummy_monthly_cost():
 def get_dummy_product_cost():
     """제품별 원가 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-001', 'product_name': '타이레놀정', 'total_cost': 1500, 'unit_cost': 500, 'selling_price': 850, 'margin': 350, 'margin_rate': 41.18, 'production_volume': 30000000},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-002', 'product_name': '자일리톨정', 'total_cost': 1200, 'unit_cost': 480, 'selling_price': 780, 'margin': 300, 'margin_rate': 38.46, 'production_volume': 25000000},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-001', 'product_name': '미용크림', 'total_cost': 800, 'unit_cost': 3200, 'selling_price': 5500, 'margin': 2300, 'margin_rate': 41.82, 'production_volume': 2500000},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-001', 'product_name': '타이레놀정', 'total_cost': 1500, 'unit_cost': 500, 'selling_price': 850, 'margin': 350, 'margin_rate': 41.18, 'production_volume': 3000},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-002', 'product_name': '자일리톨정', 'total_cost': 1200, 'unit_cost': 480, 'selling_price': 780, 'margin': 300, 'margin_rate': 38.46, 'production_volume': 2500},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-001', 'product_name': '미용크림', 'total_cost': 800, 'unit_cost': 3200, 'selling_price': 5500, 'margin': 2300, 'margin_rate': 41.82, 'production_volume': 250},
     ]
 
 
@@ -54,8 +54,8 @@ def get_dummy_cost_drivers():
 def get_dummy_breakeven():
     """손익분기점 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'fixed_cost': 4500, 'variable_cost_per_unit': 650, 'selling_price_per_unit': 850, 'breakeven_quantity': 225000, 'breakeven_amount': 19125, 'margin_of_safety': 28.5},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'fixed_cost': 4450, 'variable_cost_per_unit': 640, 'selling_price_per_unit': 845, 'breakeven_quantity': 223000, 'breakeven_amount': 18844, 'margin_of_safety': 27.8},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'fixed_cost': 4500, 'variable_cost_per_unit': 650, 'selling_price_per_unit': 850, 'breakeven_quantity': 22500, 'breakeven_amount': 1913, 'margin_of_safety': 28.5},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'fixed_cost': 4450, 'variable_cost_per_unit': 640, 'selling_price_per_unit': 845, 'breakeven_quantity': 22300, 'breakeven_amount': 1884, 'margin_of_safety': 27.8},
     ]
 
 
