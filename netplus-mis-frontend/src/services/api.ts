@@ -243,7 +243,7 @@ class ApiService {
     getStatements: (params?: string) =>
       this.get<any>(`/api/financial/statements/${params ? `?${params}` : ''}`),
     getRatios: (params?: string) =>
-      this.get<any>(`/api/financial/ratios/${params ? `?${params}` : ''}`),
+      this.get<any>(`/api/financial/ratios/${params ? `?${params}` : ''}`.replace(/\/\?/, '/?')),
   };
 
   // ========== Production API ==========

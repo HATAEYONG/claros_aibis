@@ -87,8 +87,8 @@ const FinancialIndicators: React.FC = () => {
       color: 'purple' as const,
       metrics: [
         { name: '부채비율', value: `${parseFloat(latest.debt_ratio).toFixed(1)}%`, change: calculateChange(latest.debt_ratio, previous?.debt_ratio) },
-        { name: '유동비율', value: `${parseFloat(latest.current_ratio).toFixed(1)}%`, change: calculateChange(latest.current_ratio, previous?.current_ratio) },
-        { name: '당좌비율', value: `${parseFloat(latest.quick_ratio).toFixed(1)}%`, change: calculateChange(latest.quick_ratio, previous?.quick_ratio) }
+        { name: '유동비율', value: `${(parseFloat(latest.current_ratio) * 100).toFixed(1)}%`, change: calculateChange(latest.current_ratio, previous?.current_ratio) * 100 },
+        { name: '당좌비율', value: `${(parseFloat(latest.quick_ratio) * 100).toFixed(1)}%`, change: calculateChange(latest.quick_ratio, previous?.quick_ratio) * 100 }
       ]
     },
     activity: {
@@ -156,7 +156,7 @@ const FinancialIndicators: React.FC = () => {
         },
         {
           label: '유동비율 (%)',
-          data: sortedData.map(r => parseFloat(r.current_ratio)),
+          data: sortedData.map(r => parseFloat(r.current_ratio) * 100),
           borderColor: '#f59e0b',
           backgroundColor: 'rgba(245, 158, 11, 0.1)',
           tension: 0.4
@@ -276,9 +276,9 @@ const FinancialIndicators: React.FC = () => {
         />
         <KPICard
           title="유동비율"
-          value={`${parseFloat(latestRatio.current_ratio).toFixed(1)}%`}
+          value={`${(parseFloat(latestRatio.current_ratio) * 100).toFixed(1)}%`}
           subtitle="단기지급능력"
-          changeRate={calculateChange(latestRatio.current_ratio, previousRatio?.current_ratio)}
+          changeRate={calculateChange(latestRatio.current_ratio, previousRatio?.current_ratio) * 100}
           trend={calculateChange(latestRatio.current_ratio, previousRatio?.current_ratio) >= 0 ? "up" : "down"}
           color="yellow"
           icon={TargetIcon}
@@ -383,8 +383,8 @@ const FinancialIndicators: React.FC = () => {
                   <td className="py-3 px-4 text-center text-blue-600 font-bold">{parseFloat(ratio.roe).toFixed(1)}%</td>
                   <td className="py-3 px-4 text-center text-green-600 font-bold">{parseFloat(ratio.roa).toFixed(1)}%</td>
                   <td className="py-3 px-4 text-center">{parseFloat(ratio.debt_ratio).toFixed(1)}%</td>
-                  <td className="py-3 px-4 text-center">{parseFloat(ratio.current_ratio).toFixed(1)}%</td>
-                  <td className="py-3 px-4 text-center">{parseFloat(ratio.quick_ratio).toFixed(1)}%</td>
+                  <td className="py-3 px-4 text-center">{(parseFloat(ratio.current_ratio) * 100).toFixed(1)}%</td>
+                  <td className="py-3 px-4 text-center">{(parseFloat(ratio.quick_ratio) * 100).toFixed(1)}%</td>
                 </tr>
               ))}
             </tbody>
@@ -415,7 +415,7 @@ const FinancialIndicators: React.FC = () => {
               <div>
                 <p className="font-bold text-gray-800 mb-1">안정성</p>
                 <p className="text-sm text-gray-600">
-                  부채비율 {parseFloat(latestRatio.debt_ratio).toFixed(1)}%, 유동비율 {parseFloat(latestRatio.current_ratio).toFixed(1)}%로
+                  부채비율 {parseFloat(latestRatio.debt_ratio).toFixed(1)}%, 유동비율 {(parseFloat(latestRatio.current_ratio) * 100).toFixed(1)}%로
                   {parseFloat(latestRatio.debt_ratio) <= 100 ? ' 재무 안정성이 양호합니다.' : ' 부채 관리가 필요합니다.'}
                 </p>
               </div>
