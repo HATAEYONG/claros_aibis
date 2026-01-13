@@ -36,8 +36,8 @@ def get_dummy_carbon_emissions():
 def get_dummy_energy_consumption():
     """에너지 소비 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'electricity', 'consumption': 450000, 'unit': 'kWh', 'cost': 54000000},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'gas', 'consumption': 12000, 'unit': 'm3', 'cost': 18000000},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'electricity', 'consumption': 450000, 'unit': 'kWh', 'cost': 54},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'gas', 'consumption': 12000, 'unit': 'm3', 'cost': 18},
         {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'energy_source': 'water', 'consumption': 8500, 'unit': 'ton', 'cost': 8500000},
     ]
 
@@ -57,18 +57,18 @@ def get_dummy_4m2e_metrics():
 def get_dummy_env_projects():
     """환경 개선 프로젝트 더미 데이터"""
     return [
-        {'id': 1, 'project_id': 'ENV-001', 'title': '태양광 설치', 'category': 'energy', 'status': 'in-progress', 'progress': 75, 'investment': 500000000, 'saving': 85000000},
-        {'id': 2, 'project_id': 'ENV-002', 'title': '폐열회수 시스템', 'category': 'energy', 'status': 'completed', 'progress': 100, 'investment': 350000000, 'saving': 70000000},
-        {'id': 3, 'project_id': 'ENV-003', 'title': '물 재활용 시스템', 'category': 'water', 'status': 'in-progress', 'progress': 60, 'investment': 200000000, 'saving': 45000000},
+        {'id': 1, 'project_id': 'ENV-001', 'title': '태양광 설치', 'category': 'energy', 'status': 'in-progress', 'progress': 75, 'investment': 50, 'saving': 8.5},
+        {'id': 2, 'project_id': 'ENV-002', 'title': '폐열회수 시스템', 'category': 'energy', 'status': 'completed', 'progress': 100, 'investment': 35, 'saving': 7},
+        {'id': 3, 'project_id': 'ENV-003', 'title': '물 재활용 시스템', 'category': 'water', 'status': 'in-progress', 'progress': 60, 'investment': 20, 'saving': 4.5},
     ]
 
 
 def get_dummy_social_responsibility():
     """사회적 책임 활동 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'activity_name': '지역사회 봉사', 'participants': 150, 'hours': 450, 'budget': 25000000},
-        {'id': 2, 'fiscal_year': 2024, 'activity_name': '환경 캠페인', 'participants': 80, 'hours': 160, 'budget': 15000000},
-        {'id': 3, 'fiscal_year': 2024, 'activity_name': '장학사업', 'participants': 20, 'hours': 200, 'budget': 50000000},
+        {'id': 1, 'fiscal_year': 2024, 'activity_name': '지역사회 봉사', 'participants': 150, 'hours': 450, 'budget': 25},
+        {'id': 2, 'fiscal_year': 2024, 'activity_name': '환경 캠페인', 'participants': 80, 'hours': 160, 'budget': 15},
+        {'id': 3, 'fiscal_year': 2024, 'activity_name': '장학사업', 'participants': 20, 'hours': 200, 'budget': 50},
     ]
 
 

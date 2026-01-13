@@ -19,20 +19,20 @@ from .serializers import (
 def get_dummy_monthly_purchase():
     """월별 구매 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'purchase_amount': 4500000000, 'order_count': 125},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'purchase_amount': 4200000000, 'order_count': 118},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 10, 'purchase_amount': 4000000000, 'order_count': 112},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'purchase_amount': 450, 'order_count': 125},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'purchase_amount': 420, 'order_count': 118},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 10, 'purchase_amount': 400, 'order_count': 112},
     ]
 
 
 def get_dummy_inventory():
     """재고 더미 데이터"""
     return [
-        {'id': 1, 'item_code': 'MAT-001', 'item_name': '원료A', 'category': 'A', 'current_stock': 5000, 'unit': 'kg', 'stock_value': 250000000, 'turnover_rate': 6.5, 'status': 'normal'},
-        {'id': 2, 'item_code': 'MAT-002', 'item_name': '원료B', 'category': 'A', 'current_stock': 3200, 'unit': 'kg', 'stock_value': 180000000, 'turnover_rate': 5.8, 'status': 'normal'},
-        {'id': 3, 'item_code': 'MAT-003', 'item_name': '포장재', 'category': 'B', 'current_stock': 800, 'unit': 'roll', 'stock_value': 80000000, 'turnover_rate': 4.2, 'status': 'low'},
-        {'id': 4, 'item_code': 'MAT-004', 'item_name': '라벨', 'category': 'C', 'current_stock': 12000, 'unit': 'ea', 'stock_value': 60000000, 'turnover_rate': 8.5, 'status': 'normal'},
-        {'id': 5, 'item_code': 'MAT-005', 'item_name': '부자재', 'category': 'C', 'current_stock': 500, 'unit': 'set', 'stock_value': 35000000, 'turnover_rate': 3.2, 'status': 'critical'},
+        {'id': 1, 'item_code': 'MAT-001', 'item_name': '원료A', 'category': 'A', 'current_stock': 5000, 'unit': 'kg', 'stock_value': 25, 'turnover_rate': 6.5, 'status': 'normal'},
+        {'id': 2, 'item_code': 'MAT-002', 'item_name': '원료B', 'category': 'A', 'current_stock': 3200, 'unit': 'kg', 'stock_value': 18, 'turnover_rate': 5.8, 'status': 'normal'},
+        {'id': 3, 'item_code': 'MAT-003', 'item_name': '포장재', 'category': 'B', 'current_stock': 800, 'unit': 'roll', 'stock_value': 8, 'turnover_rate': 4.2, 'status': 'low'},
+        {'id': 4, 'item_code': 'MAT-004', 'item_name': '라벨', 'category': 'C', 'current_stock': 12000, 'unit': 'ea', 'stock_value': 60, 'turnover_rate': 8.5, 'status': 'normal'},
+        {'id': 5, 'item_code': 'MAT-005', 'item_name': '부자재', 'category': 'C', 'current_stock': 500, 'unit': 'set', 'stock_value': 3.5, 'turnover_rate': 3.2, 'status': 'critical'},
     ]
 
 
@@ -40,9 +40,9 @@ def get_dummy_purchase_orders():
     """발주 더미 데이터"""
     from datetime import date, timedelta
     return [
-        {'id': 1, 'po_number': 'PO-2024-1201', 'item_name': '원료A', 'supplier_name': '신화약품', 'order_date': (date.today() - timedelta(days=3)).isoformat(), 'delivery_date': (date.today() + timedelta(days=4)).isoformat(), 'total_amount': 150000000, 'status': 'in-transit', 'is_urgent': False},
-        {'id': 2, 'po_number': 'PO-2024-1202', 'item_name': '원료B', 'supplier_name': '한독바이오', 'order_date': (date.today() - timedelta(days=1)).isoformat(), 'delivery_date': (date.today() + timedelta(days=2)).isoformat(), 'total_amount': 95000000, 'status': 'ordered', 'is_urgent': True},
-        {'id': 3, 'po_number': 'PO-2024-1203', 'item_name': '포장재', 'supplier_name': '삼성포장', 'order_date': (date.today() - timedelta(days=5)).isoformat(), 'delivery_date': (date.today() + timedelta(days=1)).isoformat(), 'total_amount': 55000000, 'status': 'in-transit', 'is_urgent': False},
+        {'id': 1, 'po_number': 'PO-2024-1201', 'item_name': '원료A', 'supplier_name': '신화약품', 'order_date': (date.today() - timedelta(days=3)).isoformat(), 'delivery_date': (date.today() + timedelta(days=4)).isoformat(), 'total_amount': 15, 'status': 'in-transit', 'is_urgent': False},
+        {'id': 2, 'po_number': 'PO-2024-1202', 'item_name': '원료B', 'supplier_name': '한독바이오', 'order_date': (date.today() - timedelta(days=1)).isoformat(), 'delivery_date': (date.today() + timedelta(days=2)).isoformat(), 'total_amount': 9.5, 'status': 'ordered', 'is_urgent': True},
+        {'id': 3, 'po_number': 'PO-2024-1203', 'item_name': '포장재', 'supplier_name': '삼성포장', 'order_date': (date.today() - timedelta(days=5)).isoformat(), 'delivery_date': (date.today() + timedelta(days=1)).isoformat(), 'total_amount': 5.5, 'status': 'in-transit', 'is_urgent': False},
     ]
 
 

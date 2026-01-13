@@ -27,6 +27,65 @@ from .serializers import (
 from .services import OntologyService
 
 
+# 더미 데이터 헬퍼 함수
+def get_dummy_ontology_categories():
+    """온톨로지 카테고리 더미 데이터"""
+    return [
+        {'id': 1, 'code': '6M', 'name_ko': '6M', 'name_en': '6M', 'level': 1, 'sort_order': 1, 'is_active': True},
+        {'id': 2, 'code': '4M2E', 'name_ko': '4M2E', 'name_en': '4M2E', 'level': 2, 'sort_order': 2, 'is_active': True},
+        {'id': 3, 'code': 'COST', 'name_ko': '원가', 'name_en': 'Cost', 'level': 3, 'sort_order': 3, 'is_active': True},
+        {'id': 4, 'code': 'FINANCIAL', 'name_ko': '재무', 'name_en': 'Financial', 'level': 4, 'sort_order': 4, 'is_active': True},
+        {'id': 5, 'code': 'ESG', 'name_ko': 'ESG', 'name_en': 'ESG', 'level': 5, 'sort_order': 5, 'is_active': True},
+    ]
+
+
+def get_dummy_ontology_elements():
+    """온톨로지 요소 더미 데이터"""
+    return [
+        {'id': 1, 'code': 'MAN', 'name_ko': '인력', 'name_en': 'Man', 'category': '6M', 'sort_order': 1, 'is_active': True},
+        {'id': 2, 'code': 'MACHINE', 'name_ko': '설비', 'name_en': 'Machine', 'category': '6M', 'sort_order': 2, 'is_active': True},
+        {'id': 3, 'code': 'MATERIAL', 'name_ko': '자재', 'name_en': 'Material', 'category': '6M', 'sort_order': 3, 'is_active': True},
+        {'id': 4, 'code': 'METHOD', 'name_ko': '방법', 'name_en': 'Method', 'category': '6M', 'sort_order': 4, 'is_active': True},
+        {'id': 5, 'code': 'MANPOWER', 'name_ko': '인원', 'name_en': 'Manpower', 'category': '4M2E', 'sort_order': 1, 'is_active': True},
+        {'id': 6, 'code': 'ENVIRONMENT', 'name_ko': '환경', 'name_en': 'Environment', 'category': '4M2E', 'sort_order': 5, 'is_active': True},
+    ]
+
+
+def get_dummy_erp_mappings():
+    """ERP 테이블 맵핑 더미 데이터"""
+    return [
+        {'id': 1, 'element': 'MAN', 'module': 'HR', 'table_name': 'EMP_MASTER', 'table_description': '사원마스터', 'is_active': True},
+        {'id': 2, 'element': 'MACHINE', 'module': 'PRODUCTION', 'table_name': 'EQ_MASTER', 'table_description': '설비마스터', 'is_active': True},
+        {'id': 3, 'element': 'MATERIAL', 'module': 'PURCHASE', 'table_name': 'MAT_MASTER', 'table_description': '자재마스터', 'is_active': True},
+    ]
+
+
+def get_dummy_ontology_relations():
+    """온톨로지 관계 더미 데이터"""
+    return [
+        {'id': 1, 'source_element': 'MAN', 'target_element': 'MANPOWER', 'relation_type': 'maps_to', 'is_active': True},
+        {'id': 2, 'source_element': 'MACHINE', 'target_element': 'ENVIRONMENT', 'relation_type': 'impacts', 'is_active': True},
+        {'id': 3, 'source_element': 'MATERIAL', 'target_element': 'COST', 'relation_type': 'contributes_to', 'is_active': True},
+    ]
+
+
+def get_dummy_data_flow_metrics():
+    """데이터 흐름 지표 더미 데이터"""
+    return [
+        {'id': 1, 'category': '6M', 'status': 'active', 'metric_date': '2024-12-01', 'record_count': 1500, 'data_quality': 98.5},
+        {'id': 2, 'category': '4M2E', 'status': 'active', 'metric_date': '2024-12-01', 'record_count': 850, 'data_quality': 97.2},
+        {'id': 3, 'category': 'COST', 'status': 'active', 'metric_date': '2024-12-01', 'record_count': 420, 'data_quality': 99.1},
+    ]
+
+
+def get_dummy_analysis_logs():
+    """분석 로그 더미 데이터"""
+    return [
+        {'id': 1, 'analysis_type': 'FLOW_CHAIN', 'start_category': '6M', 'end_category': 'ESG', 'status': 'completed', 'analysis_date': '2024-12-01', 'record_count': 3200, 'execution_time_ms': 150},
+        {'id': 2, 'analysis_type': 'IMPACT_4M2E', 'start_category': '4M2E', 'end_category': 'COST', 'status': 'completed', 'analysis_date': '2024-12-01', 'record_count': 850, 'execution_time_ms': 85},
+    ]
+
+
 class OntologyCategoryViewSet(viewsets.ModelViewSet):
     """온톨로지 카테고리 ViewSet"""
     queryset = OntologyCategory.objects.all()
@@ -41,9 +100,26 @@ class OntologyCategoryViewSet(viewsets.ModelViewSet):
             return OntologyCategoryListSerializer
         return OntologyCategorySerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_ontology_categories())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """카테고리 요약 정보"""
+        if not self.get_queryset().exists():
+            return Response({
+                'status': 'success',
+                'data': [
+                    {'category': '6M', 'element_count': 4, 'relation_count': 6},
+                    {'category': '4M2E', 'element_count': 6, 'relation_count': 8},
+                    {'category': 'COST', 'element_count': 5, 'relation_count': 4},
+                    {'category': 'FINANCIAL', 'element_count': 8, 'relation_count': 10},
+                    {'category': 'ESG', 'element_count': 7, 'relation_count': 6},
+                ]
+            })
         summaries = OntologyService.get_category_summary()
         return Response({
             'status': 'success',
@@ -65,6 +141,12 @@ class OntologyElementViewSet(viewsets.ModelViewSet):
             return OntologyElementListSerializer
         return OntologyElementSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_ontology_elements())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def by_category(self, request):
         """카테고리별 요소 조회"""
@@ -75,12 +157,19 @@ class OntologyElementViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        elements = self.queryset.filter(
+        queryset = self.get_queryset().filter(
             category__code=category_code,
             is_active=True
         ).order_by('sort_order')
 
-        serializer = OntologyElementSerializer(elements, many=True)
+        if not queryset.exists():
+            return Response({
+                'status': 'success',
+                'category': category_code,
+                'data': [d for d in get_dummy_ontology_elements() if d['category'] == category_code]
+            })
+
+        serializer = OntologyElementSerializer(queryset, many=True)
         return Response({
             'status': 'success',
             'category': category_code,
@@ -96,6 +185,12 @@ class ERPTableMappingViewSet(viewsets.ModelViewSet):
     filterset_fields = ['element', 'module', 'is_active']
     search_fields = ['table_name', 'table_description']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_erp_mappings())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def by_element(self, request):
         """요소별 ERP 테이블 조회"""
@@ -106,12 +201,19 @@ class ERPTableMappingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        tables = self.queryset.filter(
+        queryset = self.get_queryset().filter(
             element_id=element_id,
             is_active=True
         )
 
-        serializer = self.get_serializer(tables, many=True)
+        if not queryset.exists():
+            return Response({
+                'status': 'success',
+                'element_id': element_id,
+                'data': [d for d in get_dummy_erp_mappings() if d['element'] == element_id]
+            })
+
+        serializer = self.get_serializer(queryset, many=True)
         return Response({
             'status': 'success',
             'element_id': element_id,
@@ -126,6 +228,12 @@ class OntologyRelationViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['relation_type', 'is_active']
     ordering_fields = ['source_element', 'target_element']
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_ontology_relations())
+        return super().list(request, *args, **kwargs)
 
 
 class OntologyFlowAPIView(APIView):
@@ -243,10 +351,27 @@ class DataFlowMetricsViewSet(viewsets.ModelViewSet):
     ordering_fields = ['metric_date', 'category']
     ordering = ['-metric_date']
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_data_flow_metrics())
+        return super().list(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """지표 요약"""
         category_code = request.query_params.get('category')
+
+        if not self.get_queryset().exists():
+            return Response({
+                'status': 'success',
+                'data': [
+                    {'category': '6M', 'total_records': 1500, 'avg_quality': 98.5, 'status': 'active'},
+                    {'category': '4M2E', 'total_records': 850, 'avg_quality': 97.2, 'status': 'active'},
+                    {'category': 'COST', 'total_records': 420, 'avg_quality': 99.1, 'status': 'active'},
+                ]
+            })
+
         metrics = OntologyService.get_metrics_summary(category_code)
 
         return Response({
@@ -263,6 +388,12 @@ class OntologyAnalysisLogViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['analysis_type', 'status', 'start_category', 'end_category']
     ordering_fields = ['created_at', 'execution_time_ms']
     ordering = ['-created_at']
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response(get_dummy_analysis_logs())
+        return super().list(request, *args, **kwargs)
 
 
 class OntologyDashboardAPIView(APIView):

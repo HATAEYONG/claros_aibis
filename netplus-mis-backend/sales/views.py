@@ -18,64 +18,64 @@ from .serializers import (
 def get_dummy_monthly_sales():
     """월별 매출 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'target_amount': 13000000000, 'actual_amount': 13800000000, 'new_customers': 5},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'target_amount': 12500000000, 'actual_amount': 12900000000, 'new_customers': 3},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 10, 'target_amount': 12000000000, 'actual_amount': 12450000000, 'new_customers': 4},
-        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 9, 'target_amount': 11500000000, 'actual_amount': 11800000000, 'new_customers': 6},
-        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 8, 'target_amount': 11000000000, 'actual_amount': 11200000000, 'new_customers': 3},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'target_amount': 1300, 'actual_amount': 1380, 'new_customers': 5},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'target_amount': 1250, 'actual_amount': 1290, 'new_customers': 3},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 10, 'target_amount': 1200, 'actual_amount': 1245, 'new_customers': 4},
+        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 9, 'target_amount': 1150, 'actual_amount': 1180, 'new_customers': 6},
+        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 8, 'target_amount': 1100, 'actual_amount': 1120, 'new_customers': 3},
     ]
 
 
 def get_dummy_product_sales():
     """제품별 매출 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-001', 'product_name': '타이레놀정', 'sales_amount': 5200000000, 'quantity': 520000, 'share_rate': 37.7},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-002', 'product_name': '자일리톨정', 'sales_amount': 3800000000, 'quantity': 380000, 'share_rate': 27.5},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-003', 'product_name': '비타민C', 'sales_amount': 2500000000, 'quantity': 250000, 'share_rate': 18.1},
-        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-001', 'product_name': '미용크림', 'sales_amount': 1500000000, 'quantity': 150000, 'share_rate': 10.9},
-        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-002', 'product_name': '선스크린', 'sales_amount': 800000000, 'quantity': 80000, 'share_rate': 5.8},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-001', 'product_name': '타이레놀정', 'sales_amount': 520, 'quantity': 520000, 'share_rate': 37.7},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-002', 'product_name': '자일리톨정', 'sales_amount': 380, 'quantity': 380000, 'share_rate': 27.5},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-003', 'product_name': '비타민C', 'sales_amount': 250, 'quantity': 250000, 'share_rate': 18.1},
+        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-001', 'product_name': '미용크림', 'sales_amount': 150, 'quantity': 150000, 'share_rate': 10.9},
+        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-002', 'product_name': '선스크린', 'sales_amount': 80, 'quantity': 80000, 'share_rate': 5.8},
     ]
 
 
 def get_dummy_customer_tier():
     """고객 등급별 매출 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'VIP', 'customer_count': 25, 'revenue': 5800000000, 'avg_revenue': 232000000},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'GOLD', 'customer_count': 50, 'revenue': 4500000000, 'avg_revenue': 90000000},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'SILVER', 'customer_count': 100, 'revenue': 2800000000, 'avg_revenue': 28000000},
-        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'REGULAR', 'customer_count': 200, 'revenue': 700000000, 'avg_revenue': 3500000},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'VIP', 'customer_count': 25, 'revenue': 580, 'avg_revenue': 2.32},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'GOLD', 'customer_count': 50, 'revenue': 450, 'avg_revenue': 0.9},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'SILVER', 'customer_count': 100, 'revenue': 280, 'avg_revenue': 0.28},
+        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'tier': 'REGULAR', 'customer_count': 200, 'revenue': 700, 'avg_revenue': 0.035},
     ]
 
 
 def get_dummy_sales_pipeline():
     """영업 파이프라인 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'lead', 'value': 5000000000, 'count': 120},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'contact', 'value': 3500000000, 'count': 85},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'proposal', 'value': 2000000000, 'count': 45},
-        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'negotiation', 'value': 1500000000, 'count': 25},
-        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'closing', 'value': 800000000, 'count': 12},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'lead', 'value': 500, 'count': 120},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'contact', 'value': 350, 'count': 85},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'proposal', 'value': 200, 'count': 45},
+        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'negotiation', 'value': 150, 'count': 25},
+        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 12, 'stage': 'closing', 'value': 80, 'count': 12},
     ]
 
 
 def get_dummy_sales_team():
     """영업팀 성과 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '김영업', 'team': '의약품팀', 'target_amount': 2500000000, 'actual_amount': 2800000000, 'deal_count': 15, 'conversion_rate': 18.5},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '이영업', 'team': '의약품팀', 'target_amount': 2500000000, 'actual_amount': 2650000000, 'deal_count': 12, 'conversion_rate': 16.8},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '박영업', 'team': '화장품팀', 'target_amount': 2000000000, 'actual_amount': 2100000000, 'deal_count': 18, 'conversion_rate': 22.5},
-        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '최영업', 'team': '화장품팀', 'target_amount': 2000000000, 'actual_amount': 1950000000, 'deal_count': 14, 'conversion_rate': 17.2},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '김영업', 'team': '의약품팀', 'target_amount': 250, 'actual_amount': 280, 'deal_count': 15, 'conversion_rate': 18.5},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '이영업', 'team': '의약품팀', 'target_amount': 250, 'actual_amount': 265, 'deal_count': 12, 'conversion_rate': 16.8},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '박영업', 'team': '화장품팀', 'target_amount': 200, 'actual_amount': 210, 'deal_count': 18, 'conversion_rate': 22.5},
+        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'salesperson_name': '최영업', 'team': '화장품팀', 'target_amount': 200, 'actual_amount': 195, 'deal_count': 14, 'conversion_rate': 17.2},
     ]
 
 
 def get_dummy_top_customers():
     """주요 거래처 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C001', 'customer_name': '삼약제약', 'revenue': 1500000000, 'growth_rate': 12.5, 'status': 'active'},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C002', 'customer_name': '한독약품', 'revenue': 1200000000, 'growth_rate': 8.3, 'status': 'active'},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C003', 'customer_name': '동양약품', 'revenue': 950000000, 'growth_rate': -2.1, 'status': 'active'},
-        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C004', 'customer_name': '중앙제약', 'revenue': 800000000, 'growth_rate': 5.7, 'status': 'active'},
-        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C005', 'customer_name': '대한약품', 'revenue': 650000000, 'growth_rate': 15.2, 'status': 'active'},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C001', 'customer_name': '삼약제약', 'revenue': 150, 'growth_rate': 12.5, 'status': 'active'},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C002', 'customer_name': '한독약품', 'revenue': 120, 'growth_rate': 8.3, 'status': 'active'},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C003', 'customer_name': '동양약품', 'revenue': 95, 'growth_rate': -2.1, 'status': 'active'},
+        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C004', 'customer_name': '중앙제약', 'revenue': 80, 'growth_rate': 5.7, 'status': 'active'},
+        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 12, 'customer_code': 'C005', 'customer_name': '대한약품', 'revenue': 65, 'growth_rate': 15.2, 'status': 'active'},
     ]
 
 

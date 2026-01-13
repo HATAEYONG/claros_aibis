@@ -20,20 +20,20 @@ from .serializers import (
 def get_dummy_budget_actual():
     """예산실적 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'category': '매출원가', 'budget': 85000000000, 'actual': 83200000000, 'variance': -1800000000, 'variance_rate': -2.12},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'category': '판관비', 'budget': 25000000000, 'actual': 24800000000, 'variance': -200000000, 'variance_rate': -0.8},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 11, 'category': '매출원가', 'budget': 82000000000, 'actual': 81500000000, 'variance': -500000000, 'variance_rate': -0.61},
-        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 11, 'category': '판관비', 'budget': 24000000000, 'actual': 24200000000, 'variance': 200000000, 'variance_rate': 0.83},
-        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 10, 'category': '매출원가', 'budget': 80000000000, 'actual': 79500000000, 'variance': -500000000, 'variance_rate': -0.63},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'category': '매출원가', 'budget': 8500, 'actual': 8320, 'variance': -180, 'variance_rate': -2.12},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'category': '판관비', 'budget': 2500, 'actual': 2480, 'variance': -20, 'variance_rate': -0.8},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 11, 'category': '매출원가', 'budget': 8200, 'actual': 8150, 'variance': -50, 'variance_rate': -0.61},
+        {'id': 4, 'fiscal_year': 2024, 'fiscal_month': 11, 'category': '판관비', 'budget': 2400, 'actual': 2420, 'variance': 20, 'variance_rate': 0.83},
+        {'id': 5, 'fiscal_year': 2024, 'fiscal_month': 10, 'category': '매출원가', 'budget': 8000, 'actual': 7950, 'variance': -50, 'variance_rate': -0.63},
     ]
 
 
 def get_dummy_department_profitability():
     """부문별 수익성 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '의약품', 'revenue': 85000000000, 'cost': 52000000000, 'profit': 33000000000, 'margin': 38.82},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '화장품', 'revenue': 42000000000, 'cost': 28000000000, 'profit': 14000000000, 'margin': 33.33},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '건강기능식품', 'revenue': 23000000000, 'cost': 15000000000, 'profit': 8000000000, 'margin': 34.78},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '의약품', 'revenue': 8500, 'cost': 5200, 'profit': 3300, 'margin': 38.82},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '화장품', 'revenue': 4200, 'cost': 2800, 'profit': 1400, 'margin': 33.33},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '건강기능식품', 'revenue': 2300, 'cost': 1500, 'profit': 800, 'margin': 34.78},
     ]
 
 
@@ -62,20 +62,20 @@ def get_dummy_financial_ratio():
 def get_dummy_budget_allocation():
     """예산배분 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'department': '생산본부', 'allocated_budget': 45000000000, 'used_budget': 43200000000, 'remaining_budget': 1800000000, 'usage_rate': 96.0},
-        {'id': 2, 'fiscal_year': 2024, 'department': '영업본부', 'allocated_budget': 32000000000, 'used_budget': 31500000000, 'remaining_budget': 500000000, 'usage_rate': 98.44},
-        {'id': 3, 'fiscal_year': 2024, 'department': '연구소', 'allocated_budget': 28000000000, 'used_budget': 26500000000, 'remaining_budget': 1500000000, 'usage_rate': 94.64},
-        {'id': 4, 'fiscal_year': 2024, 'department': '관리부문', 'allocated_budget': 15000000000, 'used_budget': 14200000000, 'remaining_budget': 800000000, 'usage_rate': 94.67},
+        {'id': 1, 'fiscal_year': 2024, 'department': '생산본부', 'allocated_budget': 4500, 'used_budget': 4320, 'remaining_budget': 180, 'usage_rate': 96.0},
+        {'id': 2, 'fiscal_year': 2024, 'department': '영업본부', 'allocated_budget': 3200, 'used_budget': 3150, 'remaining_budget': 50, 'usage_rate': 98.44},
+        {'id': 3, 'fiscal_year': 2024, 'department': '연구소', 'allocated_budget': 2800, 'used_budget': 2650, 'remaining_budget': 150, 'usage_rate': 94.64},
+        {'id': 4, 'fiscal_year': 2024, 'department': '관리부문', 'allocated_budget': 1500, 'used_budget': 1420, 'remaining_budget': 80, 'usage_rate': 94.67},
     ]
 
 
 def get_dummy_investment_roi():
     """투자ROI 더미 데이터"""
     return [
-        {'id': 1, 'project_name': '자동화 라인 구축', 'investment_amount': 15000000000, 'expected_return': 22500000000, 'actual_return': 12000000000, 'roi': 50.0, 'payback_period': 3.5, 'status': 'in_progress'},
-        {'id': 2, 'project_name': '신제품 R&D', 'investment_amount': 8000000000, 'expected_return': 20000000000, 'actual_return': 5000000000, 'roi': 62.5, 'payback_period': 4.0, 'status': 'in_progress'},
-        {'id': 3, 'project_name': 'IT 시스템 고도화', 'investment_amount': 3500000000, 'expected_return': 5000000000, 'actual_return': 2800000000, 'roi': 80.0, 'payback_period': 2.5, 'status': 'completed'},
-        {'id': 4, 'project_name': '친환경 설비 도입', 'investment_amount': 5000000000, 'expected_return': 7000000000, 'actual_return': 2500000000, 'roi': 50.0, 'payback_period': 4.0, 'status': 'in_progress'},
+        {'id': 1, 'project_name': '자동화 라인 구축', 'investment_amount': 1500, 'expected_return': 2250, 'actual_return': 1200, 'roi': 50.0, 'payback_period': 3.5, 'status': 'in_progress'},
+        {'id': 2, 'project_name': '신제품 R&D', 'investment_amount': 800, 'expected_return': 2000, 'actual_return': 500, 'roi': 62.5, 'payback_period': 4.0, 'status': 'in_progress'},
+        {'id': 3, 'project_name': 'IT 시스템 고도화', 'investment_amount': 350, 'expected_return': 500, 'actual_return': 280, 'roi': 80.0, 'payback_period': 2.5, 'status': 'completed'},
+        {'id': 4, 'project_name': '친환경 설비 도입', 'investment_amount': 500, 'expected_return': 700, 'actual_return': 250, 'roi': 50.0, 'payback_period': 4.0, 'status': 'in_progress'},
     ]
 
 

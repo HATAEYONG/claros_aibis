@@ -21,11 +21,11 @@ def get_dummy_executive_summary():
     """경영진 요약 더미 데이터"""
     return {
         'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12,
-        'revenue': 152000000000, 'revenue_growth': 8.5,
-        'operating_profit': 12000000000, 'operating_margin': 8.0,
-        'net_profit': 9500000000, 'net_margin': 6.3,
-        'total_assets': 185000000000, 'total_liabilities': 75000000000,
-        'total_equity': 110000000000, 'employee_count': 850,
+        'revenue': 15200, 'revenue_growth': 8.5,
+        'operating_profit': 1200, 'operating_margin': 8.0,
+        'net_profit': 950, 'net_margin': 6.3,
+        'total_assets': 18500, 'total_liabilities': 7500,
+        'total_equity': 11000, 'employee_count': 850,
         'production_volume': 12500000, 'quality_rate': 98.5,
         'summary': '2024년 12월 호실적 달성. 매출 8.5% 성장, 영업이익율 8.0% 유지.',
     }
@@ -34,9 +34,9 @@ def get_dummy_executive_summary():
 def get_dummy_department_comparison():
     """부문별 비교 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '의약품', 'revenue': 85000000000, 'cost': 52000000000, 'profit': 33000000000, 'margin': 38.82, 'target_achievement': 105.5},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '화장품', 'revenue': 42000000000, 'cost': 28000000000, 'profit': 14000000000, 'margin': 33.33, 'target_achievement': 102.1},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '건강기능식품', 'revenue': 23000000000, 'cost': 15000000000, 'profit': 8000000000, 'margin': 34.78, 'target_achievement': 98.5},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '의약품', 'revenue': 8500, 'cost': 5200, 'profit': 3300, 'margin': 38.82, 'target_achievement': 105.5},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '화장품', 'revenue': 4200, 'cost': 2800, 'profit': 1400, 'margin': 33.33, 'target_achievement': 102.1},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'department': '건강기능식품', 'revenue': 2300, 'cost': 1500, 'profit': 800, 'margin': 34.78, 'target_achievement': 98.5},
     ]
 
 
@@ -63,9 +63,9 @@ def get_dummy_risks_opportunities():
 def get_dummy_recommendations():
     """개선과제 더미 데이터"""
     return [
-        {'id': 1, 'title': '자재비 절감 방안', 'description': '대체 원료 개발 및 다중 공급처 확보', 'category': '원가', 'priority': 'high', 'status': 'pending', 'expected_benefit': 5000000000, 'roi_estimate': 150, 'proposed_by': '구매팀'},
-        {'id': 2, 'title': '자동화 라인 확대', 'description': '포장 공정 자동화로 인건비 절감', 'category': '생산', 'priority': 'medium', 'status': 'in_progress', 'expected_benefit': 3000000000, 'roi_estimate': 200, 'proposed_by': '생산팀'},
-        {'id': 3, 'title': '온라인 채널 강화', 'description': '이커머스 플랫폼 입점으로 신규 고객 확보', 'category': '영업', 'priority': 'high', 'status': 'pending', 'expected_benefit': 8000000000, 'roi_estimate': 180, 'proposed_by': '마케팅팀'},
+        {'id': 1, 'title': '자재비 절감 방안', 'description': '대체 원료 개발 및 다중 공급처 확보', 'category': '원가', 'priority': 'high', 'status': 'pending', 'expected_benefit': 500, 'roi_estimate': 150, 'proposed_by': '구매팀'},
+        {'id': 2, 'title': '자동화 라인 확대', 'description': '포장 공정 자동화로 인건비 절감', 'category': '생산', 'priority': 'medium', 'status': 'in_progress', 'expected_benefit': 300, 'roi_estimate': 200, 'proposed_by': '생산팀'},
+        {'id': 3, 'title': '온라인 채널 강화', 'description': '이커머스 플랫폼 입점으로 신규 고객 확보', 'category': '영업', 'priority': 'high', 'status': 'pending', 'expected_benefit': 800, 'roi_estimate': 180, 'proposed_by': '마케팅팀'},
     ]
 
 
@@ -283,9 +283,9 @@ class RecommendationViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
 
         if not queryset.exists():
-            result = {'cost': {'name': '원가', 'count': 1, 'total_benefit': 5000000000, 'items': [get_dummy_recommendations()[0]]},
-                      'production': {'name': '생산', 'count': 1, 'total_benefit': 3000000000, 'items': [get_dummy_recommendations()[1]]},
-                      'sales': {'name': '영업', 'count': 1, 'total_benefit': 8000000000, 'items': [get_dummy_recommendations()[2]]}}
+            result = {'cost': {'name': '원가', 'count': 1, 'total_benefit': 500, 'items': [get_dummy_recommendations()[0]]},
+                      'production': {'name': '생산', 'count': 1, 'total_benefit': 300, 'items': [get_dummy_recommendations()[1]]},
+                      'sales': {'name': '영업', 'count': 1, 'total_benefit': 800, 'items': [get_dummy_recommendations()[2]]}}
             return Response(result)
 
         result = {}

@@ -51,16 +51,16 @@ def api_root(request):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def dashboard_summary(request):
-    """통합 대시보드 요약 데이터 - 더미 데이터 반환"""
+    """통합 대시보드 요약 데이터 - 더미 데이터 반환 (단위: 억원)"""
     # 데이터베이스에 초기 데이터가 없는 경우 더미 데이터 반환
     data = {
         'fiscal_year': 2024,
         'fiscal_month': 12,
-        'revenue': 150000000000,
+        'revenue': 15000,
         'revenue_growth': 8.5,
-        'operating_profit': 12000000000,
+        'operating_profit': 1200,
         'operating_margin': 8.0,
-        'net_profit': 9500000000,
+        'net_profit': 950,
         'net_margin': 6.3,
         'production_volume': 12500000,
         'quality_rate': 98.5,

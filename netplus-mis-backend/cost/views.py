@@ -18,53 +18,53 @@ from .serializers import (
 def get_dummy_monthly_cost():
     """월별 원가 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'total_cost': 98000000000, 'direct_material': 52000000000, 'direct_labor': 18000000000, 'overhead': 28000000000, 'unit_cost': 850},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'total_cost': 95000000000, 'direct_material': 50000000000, 'direct_labor': 17500000000, 'overhead': 27500000000, 'unit_cost': 830},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 10, 'total_cost': 92000000000, 'direct_material': 48500000000, 'direct_labor': 17000000000, 'overhead': 26500000000, 'unit_cost': 810},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'total_cost': 9800, 'direct_material': 5200, 'direct_labor': 1800, 'overhead': 2800, 'unit_cost': 850},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'total_cost': 9500, 'direct_material': 5000, 'direct_labor': 1750, 'overhead': 2750, 'unit_cost': 830},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 10, 'total_cost': 9200, 'direct_material': 4850, 'direct_labor': 1700, 'overhead': 2650, 'unit_cost': 810},
     ]
 
 
 def get_dummy_product_cost():
     """제품별 원가 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-001', 'product_name': '타이레놀정', 'total_cost': 15000000000, 'unit_cost': 500, 'selling_price': 850, 'margin': 350, 'margin_rate': 41.18, 'production_volume': 30000000},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-002', 'product_name': '자일리톨정', 'total_cost': 12000000000, 'unit_cost': 480, 'selling_price': 780, 'margin': 300, 'margin_rate': 38.46, 'production_volume': 25000000},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-001', 'product_name': '미용크림', 'total_cost': 8000000000, 'unit_cost': 3200, 'selling_price': 5500, 'margin': 2300, 'margin_rate': 41.82, 'production_volume': 2500000},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-001', 'product_name': '타이레놀정', 'total_cost': 1500, 'unit_cost': 500, 'selling_price': 850, 'margin': 350, 'margin_rate': 41.18, 'production_volume': 30000000},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'MED-002', 'product_name': '자일리톨정', 'total_cost': 1200, 'unit_cost': 480, 'selling_price': 780, 'margin': 300, 'margin_rate': 38.46, 'production_volume': 25000000},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'product_code': 'COS-001', 'product_name': '미용크림', 'total_cost': 800, 'unit_cost': 3200, 'selling_price': 5500, 'margin': 2300, 'margin_rate': 41.82, 'production_volume': 2500000},
     ]
 
 
 def get_dummy_cost_projects():
     """원가 절감 프로젝트 더미 데이터"""
     return [
-        {'id': 1, 'project_id': 'CR-001', 'title': '자재비 절감', 'category': 'material', 'status': 'in-progress', 'progress': 65, 'target_saving': 5000000000, 'actual_saving': 3200000000},
-        {'id': 2, 'project_id': 'CR-002', 'title': '공정 최적화', 'category': 'process', 'status': 'completed', 'progress': 100, 'target_saving': 3000000000, 'actual_saving': 3500000000},
-        {'id': 3, 'project_id': 'CR-003', 'title': '설비 효율화', 'category': 'overhead', 'status': 'in-progress', 'progress': 45, 'target_saving': 2000000000, 'actual_saving': 850000000},
+        {'id': 1, 'project_id': 'CR-001', 'title': '자재비 절감', 'category': 'material', 'status': 'in-progress', 'progress': 65, 'target_saving': 500, 'actual_saving': 320},
+        {'id': 2, 'project_id': 'CR-002', 'title': '공정 최적화', 'category': 'process', 'status': 'completed', 'progress': 100, 'target_saving': 300, 'actual_saving': 350},
+        {'id': 3, 'project_id': 'CR-003', 'title': '설비 효율화', 'category': 'overhead', 'status': 'in-progress', 'progress': 45, 'target_saving': 200, 'actual_saving': 85},
     ]
 
 
 def get_dummy_cost_drivers():
     """원가 동인 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '원료가격', 'driver_value': 125000000000, 'impact_rate': 45.2, 'change_rate': 3.5, 'trend': 'up'},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '인건비', 'driver_value': 45000000000, 'impact_rate': 16.8, 'change_rate': 2.1, 'trend': 'up'},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '에너지비', 'driver_value': 28000000000, 'impact_rate': 10.5, 'change_rate': -1.2, 'trend': 'down'},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '원료가격', 'driver_value': 12500, 'impact_rate': 45.2, 'change_rate': 3.5, 'trend': 'up'},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '인건비', 'driver_value': 4500, 'impact_rate': 16.8, 'change_rate': 2.1, 'trend': 'up'},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'driver_name': '에너지비', 'driver_value': 2800, 'impact_rate': 10.5, 'change_rate': -1.2, 'trend': 'down'},
     ]
 
 
 def get_dummy_breakeven():
     """손익분기점 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'fixed_cost': 45000000000, 'variable_cost_per_unit': 650, 'selling_price_per_unit': 850, 'breakeven_quantity': 225000, 'breakeven_amount': 191250000000, 'margin_of_safety': 28.5},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'fixed_cost': 44500000000, 'variable_cost_per_unit': 640, 'selling_price_per_unit': 845, 'breakeven_quantity': 223000, 'breakeven_amount': 188435000000, 'margin_of_safety': 27.8},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'fixed_cost': 4500, 'variable_cost_per_unit': 650, 'selling_price_per_unit': 850, 'breakeven_quantity': 225000, 'breakeven_amount': 19125, 'margin_of_safety': 28.5},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 11, 'fixed_cost': 4450, 'variable_cost_per_unit': 640, 'selling_price_per_unit': 845, 'breakeven_quantity': 223000, 'breakeven_amount': 18844, 'margin_of_safety': 27.8},
     ]
 
 
 def get_dummy_cost_structure():
     """원가 구조 더미 데이터"""
     return [
-        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'direct_material', 'amount': 52000000000, 'ratio': 53.1},
-        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'direct_labor', 'amount': 18000000000, 'ratio': 18.4},
-        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'overhead', 'amount': 28000000000, 'ratio': 28.5},
+        {'id': 1, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'direct_material', 'amount': 5200, 'ratio': 53.1},
+        {'id': 2, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'direct_labor', 'amount': 1800, 'ratio': 18.4},
+        {'id': 3, 'fiscal_year': 2024, 'fiscal_month': 12, 'cost_type': 'overhead', 'amount': 2800, 'ratio': 28.5},
     ]
 
 
