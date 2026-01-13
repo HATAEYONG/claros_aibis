@@ -274,9 +274,9 @@ class EquipmentDowntimeViewSet(viewsets.ModelViewSet):
         if not queryset.exists():
             dummy = get_dummy_equipment_downtime()
             result = {
-                'breakdown': {'count': len([d for d in dummy if d['reason'] == 'breakdown']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'breakdown'])},
-                'maintenance': {'count': len([d for d in dummy if d['reason'] == 'maintenance']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'maintenance'])},
-                'setup': {'count': len([d for d in dummy if d['reason'] == 'setup']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'setup'])},
+                'breakdown': {'count': len([d for d in dummy if d['reason'] == 'breakdown']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'breakdown')},
+                'maintenance': {'count': len([d for d in dummy if d['reason'] == 'maintenance']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'maintenance')},
+                'setup': {'count': len([d for d in dummy if d['reason'] == 'setup']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'setup')},
             }
             return Response(result)
 
