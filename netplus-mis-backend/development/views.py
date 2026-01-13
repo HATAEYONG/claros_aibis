@@ -288,7 +288,7 @@ class TechnologyRoadmapViewSet(viewsets.ModelViewSet):
             return Response({
                 'research': {'name': '연구', 'items': [d for d in dummy if d['phase'] == 'research'], 'total_investment': sum(d['required_investment'] for d in dummy if d['phase'] == 'research')},
                 'development': {'name': '개발', 'items': [d for d in dummy if d['phase'] == 'development'], 'total_investment': sum(d['required_investment'] for d in dummy if d['phase'] == 'development')},
-                'commercialization': {'name': '사업화', 'items': [d for d in dummy if d['phase'] == 'commercialization'], 'total_investment': sum(d['required_investment'] for d in dummy if d['phase'] == 'commercialization'])},
+                'commercialization': {'name': '사업화', 'items': [d for d in dummy if d['phase'] == 'commercialization'], 'total_investment': sum(d['required_investment'] for d in dummy if d['phase'] == 'commercialization')},
             })
 
         result = {}
