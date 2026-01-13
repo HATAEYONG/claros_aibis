@@ -276,7 +276,7 @@ class EquipmentDowntimeViewSet(viewsets.ModelViewSet):
             result = {
                 'breakdown': {'count': len([d for d in dummy if d['reason'] == 'breakdown']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'breakdown'])},
                 'maintenance': {'count': len([d for d in dummy if d['reason'] == 'maintenance']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'maintenance'])},
-                'setup': {'count': len([d for d in dummy if d['reason'] == 'setup']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'setup'])}
+                'setup': {'count': len([d for d in dummy if d['reason'] == 'setup']), 'total_minutes': sum(d['downtime_minutes'] for d in dummy if d['reason'] == 'setup'])},
             }
             return Response(result)
 
