@@ -7,6 +7,7 @@ class FinancialStatement(models.Model):
         ('income', '손익계산서'),
         ('balance', '재무상태표'),
         ('cashflow', '현금흐름표'),
+        ('equity', '자본변동표'),
     ]
     
     statement_type = models.CharField('재무제표 유형', max_length=20, choices=STATEMENT_TYPE_CHOICES)
@@ -32,6 +33,13 @@ class FinancialStatement(models.Model):
     operating_cashflow = models.DecimalField('영업활동 현금흐름', max_digits=15, decimal_places=2, default=0)
     investing_cashflow = models.DecimalField('투자활동 현금흐름', max_digits=15, decimal_places=2, default=0)
     financing_cashflow = models.DecimalField('재무활동 현금흐름', max_digits=15, decimal_places=2, default=0)
+
+    # 자본변동표 항목
+    beginning_equity = models.DecimalField('기초자본', max_digits=15, decimal_places=2, default=0)
+    dividend_paid = models.DecimalField('배당금 지급', max_digits=15, decimal_places=2, default=0)
+    treasury_stock = models.DecimalField('자기주식', max_digits=15, decimal_places=2, default=0)
+    other_comprehensive_income = models.DecimalField('기타포괄손익', max_digits=15, decimal_places=2, default=0)
+    ending_equity = models.DecimalField('기말자본', max_digits=15, decimal_places=2, default=0)
     
     created_at = models.DateTimeField('생성일시', auto_now_add=True)
     updated_at = models.DateTimeField('수정일시', auto_now=True)
