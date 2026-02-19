@@ -391,6 +391,37 @@ class ApiService {
     getStructureBreakdown: (params?: string) =>
       this.get<any>(`/api/cost/structure/breakdown/${params ? `?${params}` : ''}`),
   };
+
+  // ========== AI Prediction API ==========
+  predictions = {
+    // Get all available prediction models
+    getModels: () =>
+      this.get<any>('/api/ai/predictions/'),
+    // Get prediction for a specific KPI
+    predict: (code: string) =>
+      this.get<any>(`/api/ai/predictions/predict/?code=${code}`),
+    // Detect anomalies for a KPI
+    getAnomalies: (kpiCode: string, threshold?: number) =>
+      this.get<any>(`/api/ai/predictions/anomalies/?kpi_code=${kpiCode}&threshold=${threshold || 2.0}`),
+    // Get all predictions for a module
+    getAllPredictions: (module?: string) =>
+      this.get<any>(`/api/ai/predictions/all_predictions/${module ? `?module=${module}` : ''}`),
+    // Finance predictions
+    getFinancePredictions: () =>
+      this.get<any>('/api/ai/predictions/finance/'),
+    // Production predictions
+    getProductionPredictions: () =>
+      this.get<any>('/api/ai/predictions/production/'),
+    // Quality predictions
+    getQualityPredictions: () =>
+      this.get<any>('/api/ai/predictions/quality/'),
+    // Inventory predictions
+    getInventoryPredictions: () =>
+      this.get<any>('/api/ai/predictions/inventory/'),
+    // Historical financial data for charts
+    getFinanceHistorical: (days?: number) =>
+      this.get<any>(`/api/ai/predictions/finance/historical/${days ? `?days=${days}` : ''}`),
+  };
 }
 
 const api = new ApiService(API_BASE_URL);

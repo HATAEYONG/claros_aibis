@@ -21,8 +21,10 @@ import Reports from '@/components/dashboard/Reports';
 import Ontology from '@/components/dashboard/Ontology';
 import LotTrace from '@/components/dashboard/LotTrace';
 import ScenarioAnalysis from '@/components/dashboard/ScenarioAnalysis';
+import KPIManagement from '@/components/dashboard/KPIManagement';
 import ExtendedScenarioAnalysis from '@/components/dashboard/ExtendedScenarioAnalysis';
 import LLMSettings from '@/components/admin/LLMSettings';
+import PredictionManagement from '@/components/prediction/PredictionManagement';
 import { sendMessage, getActiveLLM, LLMProvider } from '@/services/llmService';
 import { generateSQL, getSchemaSummary, SQLGenerationResult } from '@/services/textToSqlService';
 import { analyzeCausalRelation, isCausalAnalysisQuery, AnalysisResult, ONTOLOGY_CONCEPTS } from '@/services/causalAnalysisService';
@@ -81,6 +83,7 @@ const App: React.FC = () => {
 
   const menuItems = [
     { id: 'dashboard', icon: BarChartIcon, label: '통합 대시보드' },
+    { id: 'kpiManagement', icon: ActivityIcon, label: 'KPI 관리' },
     { id: 'financialManagement', icon: ActivityIcon, label: '재무 관리' },
     { id: 'financialIndicators', icon: BarChartIcon, label: '재무 지표' },
     { id: 'productivity', icon: TrendUpIcon, label: '생산성 분석' },
@@ -97,6 +100,7 @@ const App: React.FC = () => {
     { id: 'scenarioAnalysis', icon: SearchIcon, label: '6M 시나리오 분석' },
     { id: 'extendedScenarioAnalysis', icon: TrendUpIcon, label: '확장 시나리오 분석' },
     { id: 'lotTrace', icon: GitBranchIcon, label: 'LOT 추적' },
+    { id: 'predictionManagement', icon: TrendUpIcon, label: '예측관리' },
     { id: 'reports', icon: FileIcon, label: '분석 리포트' },
     { id: 'llmSettings', icon: BotIcon, label: 'LLM 설정 (관리자)' },
   ];
@@ -223,6 +227,9 @@ const renderContent = () => {
   if (activeMenu === 'dashboard') {
     return <Dashboard />;
   }
+  if (activeMenu === 'kpiManagement') {
+    return <KPIManagement />;
+  }
   if (activeMenu === 'financialManagement') {
     return <FinancialManagement />;
   }
@@ -270,6 +277,9 @@ const renderContent = () => {
   }
   if (activeMenu === 'lotTrace') {
     return <LotTrace />;
+  }
+  if (activeMenu === 'predictionManagement') {
+    return <PredictionManagement />;
   }
   if (activeMenu === 'reports') {
     return <Reports />;

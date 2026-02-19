@@ -42,6 +42,15 @@ export const AI_ROUTES = {
   INSIGHTS: '/ai/insights',
 } as const;
 
+// 예측 관리 라우트
+export const PREDICTION_ROUTES = {
+  ROOT: '/prediction',
+  FINANCE: '/prediction/finance',
+  PRODUCTION: '/prediction/production',
+  QUALITY: '/prediction/quality',
+  INVENTORY: '/prediction/inventory',
+} as const;
+
 // 생산 관리 라우트
 export const PRODUCTION_ROUTES = {
   ROOT: '/production',
@@ -134,6 +143,7 @@ export const ROUTES = {
   DASHBOARD: DASHBOARD_ROUTES,
   ERP: ERP_ROUTES,
   AI: AI_ROUTES,
+  PREDICTION: PREDICTION_ROUTES,
   PRODUCTION: PRODUCTION_ROUTES,
   QUALITY: QUALITY_ROUTES,
   INVENTORY: INVENTORY_ROUTES,
@@ -228,6 +238,17 @@ export const MAIN_NAVIGATION: NavItem[] = [
     label: 'AI 어시스턴트',
     path: AI_ROUTES.CHAT,
     permissions: ['ai.view'],
+  },
+  {
+    label: '예측관리',
+    path: PREDICTION_ROUTES.ROOT,
+    permissions: ['prediction.view'],
+    children: [
+      { label: '매출/재무 예측', path: PREDICTION_ROUTES.FINANCE },
+      { label: '생산 예측', path: PREDICTION_ROUTES.PRODUCTION },
+      { label: '품질 예측', path: PREDICTION_ROUTES.QUALITY },
+      { label: '재고 예측', path: PREDICTION_ROUTES.INVENTORY },
+    ],
   },
   {
     label: '보고서',
