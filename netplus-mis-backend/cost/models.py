@@ -180,3 +180,51 @@ class CostStructure(models.Model):
 
     def __str__(self):
         return f"{self.get_cost_type_display()} - {self.fiscal_year}년 {self.fiscal_month}월"
+
+
+# ============================================================================
+# FOM ERP 동기화 팩트 테이블 (추가)
+# ============================================================================
+
+class FactCost(models.Model):
+    """원가 팩트 테이블 (ACC200 동기화)"""
+
+    cost_month = models.DateField(db_index=True, verbose_name='원가월')
+    product_id = models.CharField(max_length=50, db_index=True, verbose_name='제품코드')
+    product_name = models.CharField(max_length=200, verbose_name='제품명')
+    cost_center = models.CharField(max_length=20, null=True, verbose_name='원가부문')
+
+    # 원가 구성
+    material_cost = models.DecimalField(max_digits=18, decimal_places=2, default=0, verbose_name='재료비')
+    labor_cost = models.DecimalField(max_digits=18, decimal_places=2, default=0, verbose_name='노무비')
+    overhead_cost = models.DecimalField(max_digits=18, decimal_places=2, default=0, verbose_name='경비')
+    unit_cost = models.DecimalField(max_digits=15, decimal_places=2, verbose_name='단위원가')
+
+    # 표준 vs 실제
+    standard_cost = models.DecimalField(max_digits=15, decimal_places=2, null=True, verbose_name='표준원가')
+    variance = models.DecimalField(max_digits=15, decimal_places=2, null=True, verbose_name='원가차이')
+    variance_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, verbose_name='차이율(%)')
+
+    # 생산 수량
+    output_qty = models.IntegerField(default=0, verbose_name='생산수량')
+    total_cost = models.DecimalField(max_digits=18, decimal_places=2, verbose_name='총원가')
+
+    # 메타
+    source_id = models.CharField(max_length=100, unique=True, verbose_name='원천ID')
+    synced_at = models.DateTimeField(auto_now=True, verbose_name='동기화시각')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='생성일시')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='수정일시')
+
+    class Meta:
+        db_table = 'fact_cost'
+        managed = True
+        ordering = ['-cost_month', 'product_id']
+        indexes = [
+            models.Index(fields=['cost_month']),
+            models.Index(fields=['product_id']),
+        ]
+        verbose_name = '원가'
+        verbose_name_plural = '원가'
+
+    def __str__(self):
+        return f"{self.cost_month} {self.product_name}"

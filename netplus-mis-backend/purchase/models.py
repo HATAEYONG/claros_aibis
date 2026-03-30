@@ -192,3 +192,53 @@ class InventoryTurnover(models.Model):
 
     def __str__(self):
         return f"{self.get_category_display()} - {self.fiscal_year}년 {self.fiscal_month}월"
+
+
+# ============================================================================
+# FOM ERP 동기화 팩트 테이블 (추가)
+# ============================================================================
+
+class FactInventory(models.Model):
+    """재고 팩트 테이블 (INV100 동기화)"""
+
+    inventory_date = models.DateField(db_index=True, verbose_name='재고일자')
+    warehouse = models.CharField(max_length=20, db_index=True, verbose_name='창고')
+    location = models.CharField(max_length=50, null=True, verbose_name='위치')
+    product_id = models.CharField(max_length=50, db_index=True, verbose_name='제품코드')
+    product_name = models.CharField(max_length=200, verbose_name='제품명')
+    lot_no = models.CharField(max_length=50, null=True, verbose_name='LOT번호')
+
+    # 수량
+    qty_on_hand = models.IntegerField(default=0, verbose_name='현재고')
+    qty_available = models.IntegerField(default=0, verbose_name='가용재고')
+    qty_reserved = models.IntegerField(default=0, verbose_name='예약재고')
+    qty_in_transit = models.IntegerField(default=0, verbose_name='입고예정')
+
+    # 금액
+    unit_cost = models.DecimalField(max_digits=15, decimal_places=2, verbose_name='단가')
+    total_value = models.DecimalField(max_digits=18, decimal_places=2, verbose_name='총금액')
+
+    # 재고 관리
+    safety_stock = models.IntegerField(default=0, verbose_name='안전재고')
+    reorder_point = models.IntegerField(default=0, verbose_name='재주문점')
+    lead_time_days = models.IntegerField(default=0, verbose_name='리드타임(일)')
+
+    # 메타
+    source_id = models.CharField(max_length=100, unique=True, verbose_name='원천ID')
+    synced_at = models.DateTimeField(auto_now=True, verbose_name='동기화시각')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='생성일시')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='수정일시')
+
+    class Meta:
+        db_table = 'fact_inventory'
+        managed = True
+        ordering = ['-inventory_date', 'warehouse']
+        indexes = [
+            models.Index(fields=['inventory_date', 'warehouse']),
+            models.Index(fields=['product_id']),
+        ]
+        verbose_name = '재고'
+        verbose_name_plural = '재고'
+
+    def __str__(self):
+        return f"{self.inventory_date} {self.warehouse} {self.product_name}"

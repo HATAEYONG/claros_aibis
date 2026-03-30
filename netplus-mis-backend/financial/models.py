@@ -26,6 +26,7 @@ class FinancialStatement(models.Model):
     total_assets = models.DecimalField('총자산', max_digits=15, decimal_places=2, default=0)
     current_assets = models.DecimalField('유동자산', max_digits=15, decimal_places=2, default=0)
     non_current_assets = models.DecimalField('비유동자산', max_digits=15, decimal_places=2, default=0)
+    current_liabilities = models.DecimalField('유동부채', max_digits=15, decimal_places=2, default=0)
     total_liabilities = models.DecimalField('총부채', max_digits=15, decimal_places=2, default=0)
     total_equity = models.DecimalField('총자본', max_digits=15, decimal_places=2, default=0)
     
@@ -87,3 +88,46 @@ class FinancialRatio(models.Model):
     
     def __str__(self):
         return f"재무비율 - {self.fiscal_year}년 {self.fiscal_month}월"
+
+
+# ============================================================================
+# FOM ERP 동기화 팩트 테이블 (추가)
+# ============================================================================
+
+class FactFinance(models.Model):
+    """재무 팩트 테이블 (FIN300, FIN400 통합)"""
+
+    fiscal_month = models.DateField(db_index=True, verbose_name='회계월')
+    account_type = models.CharField(max_length=20, verbose_name='계정구분')  # PL/BS
+    account_code = models.CharField(max_length=50, verbose_name='계정코드')
+    account_name = models.CharField(max_length=200, verbose_name='계정명')
+
+    # 금액
+    amount = models.DecimalField(max_digits=18, decimal_places=2, verbose_name='금액')
+    prev_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, verbose_name='전기금액')
+
+    # 손익계산서 주요 항목
+    revenue = models.DecimalField(max_digits=18, decimal_places=2, null=True, verbose_name='매출액')
+    cogs = models.DecimalField(max_digits=18, decimal_places=2, null=True, verbose_name='매출원가')
+    gross_profit = models.DecimalField(max_digits=18, decimal_places=2, null=True, verbose_name='매출총이익')
+    operating_profit = models.DecimalField(max_digits=18, decimal_places=2, null=True, verbose_name='영업이익')
+    net_profit = models.DecimalField(max_digits=18, decimal_places=2, null=True, verbose_name='당기순이익')
+
+    # 메타
+    source_id = models.CharField(max_length=100, unique=True, verbose_name='원천ID')
+    synced_at = models.DateTimeField(auto_now=True, verbose_name='동기화시각')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='생성일시')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='수정일시')
+
+    class Meta:
+        db_table = 'fact_finance'
+        managed = True
+        ordering = ['-fiscal_month', 'account_code']
+        indexes = [
+            models.Index(fields=['fiscal_month', 'account_type']),
+        ]
+        verbose_name = '재무'
+        verbose_name_plural = '재무'
+
+    def __str__(self):
+        return f"{self.fiscal_month} {self.account_name}"
