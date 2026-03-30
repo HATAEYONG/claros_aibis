@@ -6,6 +6,7 @@ from .views import (
     DefectRecordViewSet,
     CustomerComplaintViewSet,
     ProcessCapabilityViewSet,
+    QualityKPIViewSet,
 )
 
 router = DefaultRouter()
@@ -14,6 +15,7 @@ router.register(r'defect-types', DefectTypeViewSet, basename='defect-type')
 router.register(r'defect-records', DefectRecordViewSet, basename='defect-record')
 router.register(r'complaints', CustomerComplaintViewSet, basename='customer-complaint')
 router.register(r'process-capabilities', ProcessCapabilityViewSet, basename='process-capability')
+router.register(r'kpi', QualityKPIViewSet, basename='quality-kpi')
 
 urlpatterns = [
     path('', include(router.urls)),

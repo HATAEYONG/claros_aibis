@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, Avg, Count
+from utils.batch_operations import BatchOperationsMixin
+from utils.export_import import ExportImportMixin
 from .models import ProductionLine, WorkOrder, DailyProduction, Equipment
 from .serializers import (
     ProductionLineSerializer,
@@ -64,7 +66,7 @@ def get_dummy_equipment():
     ]
 
 
-class ProductionLineViewSet(viewsets.ModelViewSet):
+class ProductionLineViewSet(ExportImportMixin, BatchOperationsMixin, viewsets.ModelViewSet):
     """생산 라인 ViewSet"""
     queryset = ProductionLine.objects.all()
     serializer_class = ProductionLineSerializer
@@ -103,7 +105,7 @@ class ProductionLineViewSet(viewsets.ModelViewSet):
         })
 
 
-class WorkOrderViewSet(viewsets.ModelViewSet):
+class WorkOrderViewSet(ExportImportMixin, BatchOperationsMixin, viewsets.ModelViewSet):
     """작업 지시서 ViewSet"""
     queryset = WorkOrder.objects.all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -194,7 +196,7 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         })
 
 
-class DailyProductionViewSet(viewsets.ModelViewSet):
+class DailyProductionViewSet(ExportImportMixin, BatchOperationsMixin, viewsets.ModelViewSet):
     """일일 생산 실적 ViewSet"""
     queryset = DailyProduction.objects.all()
     serializer_class = DailyProductionSerializer
@@ -253,7 +255,7 @@ class DailyProductionViewSet(viewsets.ModelViewSet):
         })
 
 
-class EquipmentViewSet(viewsets.ModelViewSet):
+class EquipmentViewSet(ExportImportMixin, BatchOperationsMixin, viewsets.ModelViewSet):
     """생산 설비 ViewSet"""
     queryset = Equipment.objects.all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -300,3 +302,70 @@ class EquipmentViewSet(viewsets.ModelViewSet):
             'count': equipment_list.count(),
             'equipment': serializer.data,
         })
+
+
+class ProductionKPIViewSet(viewsets.ViewSet):
+    """Production KPI ViewSet"""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        from .kpi_engine import ProductionKPIEngine
+        self.engine = ProductionKPIEngine()
+
+    @action(detail=False, methods=['get'])
+    def all_kpis(self, request):
+        """모든 생산 KPI 조회"""
+        from datetime import datetime
+
+        target_date_str = request.query_params.get('date')
+        target_date = None
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        kpis = self.engine.calculate_all_kpis(target_date)
+
+        return Response({
+            'target_date': target_date_str or 'today',
+            'total_kpis': len(kpis),
+            'kpis': list(kpis.values())
+        })
+
+    @action(detail=False, methods=['get'])
+    def kpi(self, request):
+        """특정 KPI 조회"""
+        kpi_code = request.query_params.get('code')
+
+        if not kpi_code:
+            return Response(
+                {'error': 'KPI 코드(code) 파라미터가 필요합니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        from datetime import datetime
+
+        target_date_str = request.query_params.get('date')
+        target_date = None
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        kpis = self.engine.calculate_all_kpis(target_date)
+
+        if kpi_code not in kpis:
+            return Response(
+                {'error': f'알 수 없는 KPI 코드: {kpi_code}'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(kpis[kpi_code])
