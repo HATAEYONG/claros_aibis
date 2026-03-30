@@ -11,6 +11,7 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 from django.db import connection
+from django.db import models
 from django.conf import settings
 
 logger = __name__
