@@ -827,7 +827,203 @@ class Impact4M2EAPIView(APIView):
 
 ---
 
-**문서 버전**: 1.0
+## 9. 원가 분석 컴포넌트 (Cost Analysis Components)
+
+### 9.1 원가 분석 컴포넌트 개요
+
+| 컴포넌트 | 메뉴 경로 | 설명 |
+|---------|----------|-----|
+| **PurchaseCost** | 구매 관리 → 구매 원가 | 자재별 구매 단가와 총비용 분석 |
+| **QualityCost** | 품질 관리 → 품질 원가 | 예방/평가/실패 비용 분석 |
+| **SalesCost** | 영업 관리 → 견적 원가 | 제품별 직접/간접 원가와 수익성 분석 |
+| **DesignCost** | 개발 관리 → 설계 원가 | 설계 작업비와 자재비 분석 |
+| **OutsourcingCost** | 생산 관리 → 외주 원가 | 협력사별 외주비와 품질 관리 |
+
+### 9.2 원가 분석 컴포넌트 상세
+
+#### 9.2.1 PurchaseCost (구매 원가)
+
+```typescript
+interface PurchaseCostData {
+  id: number;
+  supplier: string;      // 협력사 (A사, B사, C사, ...)
+  material: string;      // 자재명
+  purchasePrice: number; // 구매 단가
+  quantity: number;      // 수량
+  totalCost: number;     // 총비용
+  unit: string;          // 단위 (kg, 개, m)
+  category: string;      // 카테고리 (원자재, 부품, 소모품, 포장재)
+}
+```
+
+**기능:**
+- 협력사별 구매액 분석 (바 차트)
+- 자재 카테고리별 필터링
+- 월별 구매 단가 추이 (라인 차트)
+- 구매 원가 상세 테이블
+
+**KPI 지표:**
+- 총 구매액
+- 평균 단가
+- 협력사 수
+- 구매 품목 수
+
+#### 9.2.2 QualityCost (품질 원가)
+
+```typescript
+interface QualityCostData {
+  id: number;
+  costType: string;      // 비용 유형 (예방 활동, 평가 활동, 내부 실패, 외부 실패)
+  description: string;   // 설명 (품질 교육, 공정 관리, 입고 검사, ...)
+  costAmount: number;    // 비용 금액
+  defectRate: number;    // 불량률
+  impactedProducts: number; // 영향 제품 수
+  category: 'prevention' | 'appraisal' | 'failure' | 'external';
+}
+```
+
+**기능:**
+- 예방/평가/내부실패/외부실패 비용 분석
+- 불량률 추이 모니터링
+- 품질 비용 구성 (도넛 차트)
+- 월별 품질 비용 추이 (스택 바 차트)
+
+**KPI 지표:**
+- 총 품질 비용
+- 불량률
+- 예방 비용
+- 실패 비용 (내부 + 외부)
+
+#### 9.2.3 SalesCost (견적/매출 원가)
+
+```typescript
+interface SalesCostData {
+  id: number;
+  product: string;       // 제품명 (제품 A, B, C, D)
+  costType: string;      // 원가 유형 (직접 원가, 간접 원가)
+  directCost: number;    // 직접 원가
+  indirectCost: number;  // 간접 원가
+  totalCost: number;     // 총 원가
+  unitCost: number;      // 단위 원가
+  salesVolume: number;   // 판매량
+  salesRevenue: number;  // 매출액
+  profitMargin: number;  // 이익률 (%)
+}
+```
+
+**기능:**
+- 제품별 직접/간접 원가 분석
+- 수익성 및 마진율 분석
+- 월별 수익성 추이 (라인 차트)
+- 매출액 대비 원가 비율
+
+**KPI 지표:**
+- 총 매출액
+- 총 원가 (직접 + 간접)
+- 영업이익
+- 평균 마진율
+
+#### 9.2.4 DesignCost (설계 원가)
+
+```typescript
+interface DesignCostData {
+  id: number;
+  projectName: string;   // 프로젝트명
+  projectCode: string;   // 프로젝트 코드 (D-2024-001)
+  designType: string;    // 설계 유형 (신규 설계, 설계 변경, 최적화, 컨셉 설계, 시스템 설계, 해석/시뮬레이션)
+  designHours: number;   // 설계 작업시간
+  hourlyCost: number;    // 시간당 단가
+  materialCost: number;  // 자재비
+  softwareCost: number;  // 소프트웨어비
+  totalCost: number;     // 총비용
+  designer: string;      // 설계사
+  status: 'planning' | 'in-progress' | 'review' | 'completed';
+}
+```
+
+**기능:**
+- 프로젝트별 설계비 분석
+- 설계 유형별 비용 분석
+- 설계사별 성과 분석
+- 프로젝트 상태 관리
+
+**KPI 지표:**
+- 총 설계비
+- 총 작업시간
+- 평균 시간당 단가
+- 진행 프로젝트 수
+
+#### 9.2.5 OutsourcingCost (외주 원가)
+
+```typescript
+interface OutsourcingData {
+  id: number;
+  vendor: string;        // 협력사 (한국외주A사, 부산외주B사, ...)
+  itemName: string;      // 품목명
+  outsourcingType: string; // 외주 유형 (가공, 조립, 표면처리, 열처리, 용접, 사출성형, 도장)
+  quantity: number;      // 수량
+  unitCost: number;      // 단가
+  totalCost: number;     // 총비용
+  deliveryDate: string;  // 납기일
+  status: 'pending' | 'in-production' | 'delivered' | 'accepted' | 'rejected';
+  qualityRating?: number; // 품질 등급 (1.0 ~ 5.0)
+}
+```
+
+**기능:**
+- 협력사별 외주액 분석 (가로 바 차트)
+- 외주 유형별 비용 분석
+- 품질 등급 관리
+- 납기 준수율 추적
+
+**KPI 지표:**
+- 총 외주비
+- 협력사 수
+- 평균 단가
+- 진행 품목 수
+
+### 9.3 원가 분석 컴포넌트 통합
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      원가 분석 컴포넌트 구조                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ PurchaseCost │  │ QualityCost  │  │  SalesCost   │          │
+│  │  (구매 원가) │  │ (품질 원가) │  │ (견적 원가) │          │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+│         │                 │                 │                  │
+│         └─────────────────┴─────────────────┘                  │
+│                           │                                     │
+│                           ▼                                     │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                   Cost Management                          │ │
+│  │                   (원가 관리)                               │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                           │                                     │
+│  ┌──────────────┐  ┌──────────────┐                            │
+│  │ DesignCost   │  │OutsourcingCost│                            │
+│  │ (설계 원가)  │  │ (외주 원가)  │                            │
+│  └──────────────┘  └──────────────┘                            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 9.4 원가 분석 → 4M2E 연계
+
+| 원가 분석 | 4M2E 요소 | 연계 방식 |
+|----------|----------|----------|
+| 구매 원가 | Material | 자재별 원가 → 4M2E Material 요소 |
+| 품질 원가 | Method | 품질 비용 → 4M2E Method/Measurement 요소 |
+| 견적 원가 | Material | 제품별 원가 → 4M2E Material 요소 |
+| 설계 원가 | Method | 설계 비용 → 4M2E Method 요소 |
+| 외주 원가 | Method | 외주 비용 → 4M2E Method 요소 |
+
+---
+
+**문서 버전**: 1.1
 **작성일**: 2025-12-26
+**수정일**: 2026-03-05
 **작성자**: Claude AI Assistant
 **프로젝트**: NetPlus MIS-AI Dashboard (유한산업)
