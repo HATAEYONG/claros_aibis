@@ -1,7 +1,5 @@
 # Docker Compose for NetPlus MIS-AI Dashboard
-# AWS Lightsail 배포용
-
-version: '3.8'
+# Production deployment with Celery, ELK Stack, and Prometheus/Grafana
 
 services:
   # PostgreSQL Database
@@ -9,6 +7,8 @@ services:
     image: postgres:15-alpine
     container_name: netplus-postgres
     restart: always
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -23,6 +23,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis (Celery broker & cache)
+  redis:
+    image: redis:7-alpine
+    container_name: netplus-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - netplus-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Django Backend
   backend:
     build:
@@ -33,6 +51,7 @@ services:
     volumes:
       - backend_static:/app/staticfiles
       - backend_media:/app/media
+      - ./netplus-mis-backend/logs:/var/log/netplus
     environment:
       DEBUG: False
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production-min-50-chars}
@@ -45,13 +64,185 @@ services:
       DB_PORT: 5432
       CORS_ALLOW_ALL_ORIGINS: "False"
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost}
+      # Celery Configuration
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      # Logging Configuration
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      # Metrics Configuration
+      ENABLE_METRICS: "true"
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus
+      # Adaptive Batch Configuration
+      ADAPTIVE_BATCH_ENABLED: "true"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - netplus-network
     ports:
       - "8000:8000"
+
+  # Celery Worker (with priority queues)
+  celery-worker:
+    build:
+      context: ./netplus-mis-backend
+      dockerfile: Dockerfile
+    container_name: netplus-celery-worker
+    restart: always
+    command: >
+      celery -A config worker
+      --loglevel=info
+      --concurrency=4
+      --autoscale=2,8
+      --queues=high,medium,low
+    volumes:
+      - ./netplus-mis-backend/logs:/var/log/netplus
+    environment:
+      DEBUG: False
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production-min-50-chars}
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: netplus_mis
+      DB_USER: netplus_user
+      DB_PASSWORD: netplus_password_2024
+      DB_HOST: db
+      DB_PORT: 5432
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+      ENABLE_METRICS: "true"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - netplus-network
+
+  # Celery Beat Scheduler
+  celery-beat:
+    build:
+      context: ./netplus-mis-backend
+      dockerfile: Dockerfile
+    container_name: netplus-celery-beat
+    restart: always
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./netplus-mis-backend/logs:/var/log/netplus
+    environment:
+      DEBUG: False
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production-min-50-chars}
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: netplus_mis
+      DB_USER: netplus_user
+      DB_PASSWORD: netplus_password_2024
+      DB_HOST: db
+      DB_PORT: 5432
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+    depends_on:
+      - db
+      - redis
+    networks:
+      - netplus-network
+
+  # Flower (Celery Monitoring)
+  flower:
+    build:
+      context: ./netplus-mis-backend
+      dockerfile: Dockerfile
+    container_name: netplus-flower
+    restart: always
+    command: celery -A config flower --port=5555 --broker=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - redis
+    networks:
+      - netplus-network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: netplus-elasticsearch
+    restart: always
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - netplus-network
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: netplus-kibana
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - netplus-network
+    ports:
+      - "5601:5601"
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: netplus-prometheus
+    restart: always
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - netplus-network
+    ports:
+      - "9090:9090"
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:10.3.0
+    container_name: netplus-grafana
+    restart: always
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./netplus-mis-backend/config/grafana_dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=
+    depends_on:
+      - prometheus
+    networks:
+      - netplus-network
+    ports:
+      - "3000:3000"
 
   # React Frontend (with nginx)
   frontend:
@@ -72,6 +263,10 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
   backend_static:
   backend_media:
 
