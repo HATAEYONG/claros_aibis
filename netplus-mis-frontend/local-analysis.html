@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로컬 데이터 분석 대시보드</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: rgba(255,255,255,0.8);
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(255,255,255,0.2); }
+    .btn.active { background: #10b981; border-color: #10b981; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e3a5f;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .metric:last-child { border-bottom: none; }
+    .metric-label { color: #666; font-size: 14px; }
+    .metric-value { font-weight: 600; color: #1e3a5f; font-size: 16px; }
+    .metric-value.positive { color: #10b981; }
+    .metric-value.negative { color: #ef4444; }
+    .metric-value.neutral { color: #6b7280; }
+    .insights {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+    .insight-item {
+      padding: 8px 0;
+      font-size: 14px;
+      color: #1e3a5f;
+    }
+    .chart-placeholder {
+      height: 200px;
+      background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: white;
+    }
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .error {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .tab:hover { background: rgba(255,255,255,0.2); }
+    .tab.active { background: #10b981; border-color: #10b981; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      background: #f8fafc;
+      padding: 10px;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .data-table td {
+      padding: 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .data-table tr:hover { background: #f8fafc; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #dc2626; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 로컬 데이터 분석 대시보드</h1>
+    <p class="subtitle">SQLite 데이터베이스 기반 분석 | 최신 3개월 데이터</p>
+
+    <div class="controls">
+      <button class="btn active" onclick="showTab('sales')">📈 매출 분석</button>
+      <button class="btn" onclick="showTab('quality')">✅ 품질 분석</button>
+      <button class="btn" onclick="showTab('production')">🏭 생산 분석</button>
+      <button class="btn" onclick="showTab('comprehensive')">📋 종합 분석</button>
+      <button class="btn btn-secondary" onclick="refreshData()">🔄 새로고침</button>
+    </div>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>데이터를 불러오는 중...</p>
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="content" style="display: none;"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:8000/api/local-analysis';
+    let currentTab = 'sales';
+    let currentData = null;
+
+    // 페이지 로드 시 자동으로 매출 분석 표시
+    window.onload = () => {
+      loadAnalysis('sales');
+    };
+
+    function showTab(tab) {
+      currentTab = tab;
+
+      // 버튼 스타일 업데이트
+      document.querySelectorAll('.btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // 데이터 로드
+      loadAnalysis(tab);
+    }
+
+    function refreshData() {
+      loadAnalysis(currentTab);
+    }
+
+    async function loadAnalysis(type) {
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const content = document.getElementById('content');
+
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      content.style.display = 'none';
+
+      try {
+        let url = `${API_BASE}/${type}/`;
+        if (type === 'sales') {
+          url += '?months=3';
+        } else if (type === 'comprehensive') {
+          url += '?days=90';
+        } else {
+          url += '?days=90';
+        }
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success) {
+          currentData = result.data;
+          renderContent(type, result.data);
+          loading.style.display = 'none';
+          content.style.display = 'block';
+        } else {
+          throw new Error(result.error || '분석 실패');
+        }
+      } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.textContent = `❌ 오류: ${err.message}`;
+      }
+    }
+
+    function renderContent(type, data) {
+      const content = document.getElementById('content');
+
+      if (type === 'comprehensive') {
+        renderComprehensive(data);
+      } else if (type === 'sales') {
+        renderSales(data);
+      } else if (type === 'quality') {
+        renderQuality(data);
+      } else if (type === 'production') {
+        renderProduction(data);
+      }
+    }
+
+    function formatNumber(num) {
+      if (num >= 10000) return (num / 10000).toFixed(1) + '만';
+      if (num >= 1000) return (num / 1000).toFixed(1) + '천';
+      return num?.toLocaleString() || '0';
+    }
+
+    function formatPercent(num) {
+      return num?.toFixed(1) + '%' || '0%';
+    }
+
+    function getChangeClass(value) {
+      if (value > 0) return 'positive';
+      if (value < 0) return 'negative';
+      return 'neutral';
+    }
+
+    function renderSales(data) {
+      const stats = data.statistics;
+      const monthly = data.monthly_data.slice(0, 6);
+
+      const html = `
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">📈 매출 요약</div>
+            <div class="metric">
+              <span class="metric-label">분석 기간</span>
+              <span class="metric-value">${data.period}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">총 목표</span>
+              <span class="metric-value">${formatNumber(stats.total_target)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">총 실적</span>
+              <span class="metric-value">${formatNumber(stats.total_actual)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">전체 달성률</span>
+              <span class="metric-value ${getChangeClass(stats.overall_achievement_rate - 100)}">${formatPercent(stats.overall_achievement_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">전월 대비</span>
+              <span class="metric-value ${getChangeClass(stats.sales_change_rate)}">${formatPercent(stats.sales_change_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">신규 고객</span>
+              <span class="metric-value">${stats.total_new_customers}명</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">💡 인사이트</div>
+            <div class="insights">
+              ${data.insights.map(insight => `<div class="insight-item">${insight}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📅 월별 추세</div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>년도</th>
+                <th>월</th>
+                <th>목표</th>
+                <th>실적</th>
+                <th>달성률</th>
+                <th>신규 고객</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${monthly.map(m => `
+                <tr>
+                  <td>${m.year}</td>
+                  <td>${m.month}월</td>
+                  <td>${formatNumber(m.target_amount)}</td>
+                  <td>${formatNumber(m.actual_amount)}</td>
+                  <td><span class="badge ${m.achievement_rate >= 100 ? 'badge-success' : 'badge-warning'}">${formatPercent(m.achievement_rate)}</span></td>
+                  <td>${m.new_customers}명</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderQuality(data) {
+      const stats = data.statistics;
+
+      const html = `
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">✅ 품질 요약</div>
+            <div class="metric">
+              <span class="metric-label">분석 기간</span>
+              <span class="metric-value">${data.period}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">검사 횟수</span>
+              <span class="metric-value">${stats.total_inspections}회</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">검사 수량</span>
+              <span class="metric-value">${formatNumber(stats.total_sampled)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">불량 수</span>
+              <span class="metric-value">${stats.total_defects}개</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">평균 불량률</span>
+              <span class="metric-value">${formatPercent(stats.avg_defect_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">합격률</span>
+              <span class="metric-value">${formatPercent(stats.pass_rate)}</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">💡 인사이트</div>
+            <div class="insights">
+              ${data.insights.map(insight => `<div class="insight-item">${insight}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🏭 제품별 불량률 TOP 5</div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>제품</th>
+                <th>검사 횟수</th>
+                <th>검사 수량</th>
+                <th>불량 수</th>
+                <th>불량률</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.product_quality.map(p => `
+                <tr>
+                  <td>${p.product_name}</td>
+                  <td>${p.inspection_count}회</td>
+                  <td>${formatNumber(p.total_sampled)}</td>
+                  <td>${p.total_defects}개</td>
+                  <td><span class="badge ${p.avg_defect_rate > 1 ? 'badge-danger' : 'badge-success'}">${formatPercent(p.avg_defect_rate)}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderProduction(data) {
+      const stats = data.statistics;
+
+      const html = `
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">🏭 생산 요약</div>
+            <div class="metric">
+              <span class="metric-label">분석 기간</span>
+              <span class="metric-value">${data.period}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">생산 기록</span>
+              <span class="metric-value">${stats.total_records}일</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">목표 생산량</span>
+              <span class="metric-value">${formatNumber(stats.total_target)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">실제 생산량</span>
+              <span class="metric-value">${formatNumber(stats.total_produced)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">달성률</span>
+              <span class="metric-value ${getChangeClass(stats.overall_achievement_rate - 100)}">${formatPercent(stats.overall_achievement_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">평균 효율</span>
+              <span class="metric-value">${formatPercent(stats.avg_efficiency)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">불량률</span>
+              <span class="metric-value">${formatPercent(stats.defect_rate)}</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">💡 인사이트</div>
+            <div class="insights">
+              ${data.insights.map(insight => `<div class="insight-item">${insight}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 라인별 생산 현황</div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>라인</th>
+                <th>생산량</th>
+                <th>평균 효율</th>
+                <th>달성률</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.line_performance.map(l => `
+                <tr>
+                  <td>${l.line_name}</td>
+                  <td>${formatNumber(l.total_produced)}</td>
+                  <td>${formatPercent(l.avg_efficiency)}</td>
+                  <td>${formatPercent(l.avg_achievement_rate)}</td>
+                  <td><span class="badge ${l.avg_efficiency >= 90 ? 'badge-success' : 'badge-warning'}">${l.avg_efficiency >= 90 ? '양호' : '개선필요'}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderComprehensive(data) {
+      const summary = data.summary;
+
+      const html = `
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">📊 종합 분석</div>
+            <div class="metric">
+              <span class="metric-label">분석 일시</span>
+              <span class="metric-value" style="font-size: 12px;">${new Date(data.analysis_date).toLocaleString('ko-KR')}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">분석 기간</span>
+              <span class="metric-value">최근 ${data.period_days}일 (${data.period_months}개월)</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🎯 핵심 지표</div>
+            <div class="metric">
+              <span class="metric-label">총 매출</span>
+              <span class="metric-value">${formatNumber(summary.key_metrics.total_sales)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">매출 달성률</span>
+              <span class="metric-value ${getChangeClass(summary.key_metrics.sales_achievement_rate - 100)}">${formatPercent(summary.key_metrics.sales_achievement_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">생산량</span>
+              <span class="metric-value">${formatNumber(summary.key_metrics.total_produced)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">품질 합격률</span>
+              <span class="metric-value">${formatPercent(summary.key_metrics.quality_pass_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">생산 효율</span>
+              <span class="metric-value">${formatPercent(summary.key_metrics.production_efficiency)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 개선 권장사항</div>
+          <div class="insights">
+            ${summary.recommendations.map(rec => `<div class="insight-item">🔔 ${rec}</div>`).join('')}
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">📈 매출</div>
+            <div class="metric">
+              <span class="metric-label">전월 대비</span>
+              <span class="metric-value ${getChangeClass(data.sales.statistics.sales_change_rate)}">${formatPercent(data.sales.statistics.sales_change_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">달성률</span>
+              <span class="metric-value">${formatPercent(data.sales.statistics.avg_achievement_rate)}</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">✅ 품질</div>
+            <div class="metric">
+              <span class="metric-label">불량률</span>
+              <span class="metric-value">${formatPercent(data.quality.statistics.avg_defect_rate)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">합격률</span>
+              <span class="metric-value">${formatPercent(data.quality.statistics.pass_rate)}</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🏭 생산</div>
+            <div class="metric">
+              <span class="metric-label">효율</span>
+              <span class="metric-value">${formatPercent(data.production.statistics.avg_efficiency)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">불량률</span>
+              <span class="metric-value">${formatPercent(data.production.statistics.defect_rate)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('content').innerHTML = html;
+    }
+  </script>
+</body>
+</html>

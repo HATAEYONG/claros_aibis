@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YH Database Connection Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-online { background: #d1fae5; color: #065f46; }
+    .status-offline { background: #fee2e2; color: #dc2626; }
+    .status-loading { background: #fef3c7; color: #92400e; }
+    .btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #5568d3; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-success { background: #10b981; }
+    .btn-success:hover { background: #059669; }
+    .btn-warning { background: #f59e0b; }
+    .btn-warning:hover { background: #d97706; }
+    .result {
+      background: #1f2937;
+      color: #10b981;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-top: 12px;
+    }
+    .result.error { background: #fee2e2; color: #dc2626; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-label { color: #666; font-size: 14px; }
+    .info-value { font-weight: 500; color: #333; }
+    .table-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .table-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 13px;
+    }
+    .table-item:last-child { border-bottom: none; }
+    .table-name { font-weight: 500; color: #4f46e5; }
+    .table-count { color: #6b7280; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗄️ YH Database Connection Test</h1>
+
+    <!-- DB Config Info -->
+    <div class="card">
+      <div class="section-title">
+        📡 Database Configuration
+        <span id="config-status" class="status status-loading">Loading...</span>
+      </div>
+      <div id="config-info" class="info-item">
+        <span class="info-label">Loading configuration...</span>
+      </div>
+      <button class="btn btn-success" onclick="testConfig()">✅ Check Configuration</button>
+    </div>
+
+    <!-- Connection Test -->
+    <div class="card">
+      <div class="section-title">
+        🔌 Connection Test
+        <span id="conn-status" class="status status-offline">Not Tested</span>
+      </div>
+      <button class="btn" onclick="testConnection()">🔗 Test Connection</button>
+      <div id="connection-result"></div>
+    </div>
+
+    <!-- Tables List -->
+    <div class="card">
+      <div class="section-title">
+        📊 Database Tables
+        <span id="tables-status" class="status status-offline">Not Loaded</span>
+      </div>
+      <button class="btn" onclick="loadTables()">📋 Load Tables</button>
+      <div id="tables-result"></div>
+    </div>
+
+    <!-- SQL Execution -->
+    <div class="card">
+      <div class="section-title">
+        💻 SQL Execution
+        <span id="sql-status" class="status status-offline">Ready</span>
+      </div>
+      <textarea id="sql-input" placeholder="Enter SQL query here... Example: SELECT * FROM table_name LIMIT 10"
+                style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace; resize: vertical;"></textarea>
+      <div style="margin-top: 12px;">
+        <button class="btn btn-success" onclick="executeSQL()">▶️ Execute SQL</button>
+        <button class="btn btn-warning" onclick="loadSampleSQL()">📝 Load Sample SQL</button>
+      </div>
+      <div id="sql-result"></div>
+    </div>
+
+    <!-- Recent Data Summary -->
+    <div class="card">
+      <div class="section-title">
+        📅 Recent Data Summary (Last 3 Months)
+        <span id="summary-status" class="status status-offline">Not Loaded</span>
+      </div>
+      <button class="btn" onclick="loadSummary()">📊 Load Summary</button>
+      <div id="summary-result"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:8000/api/yh';
+
+    async function testConfig() {
+      const statusEl = document.getElementById('config-status');
+      const infoEl = document.getElementById('config-info');
+
+      statusEl.className = 'status status-loading';
+      statusEl.textContent = 'Loading...';
+
+      try {
+        const response = await fetch(`${API_BASE}/config/`);
+        const data = await response.json();
+
+        if (data.success && data.config) {
+          statusEl.className = 'status status-online';
+          statusEl.textContent = 'Connected';
+
+          infoEl.innerHTML = `
+            <div class="info-item"><span class="info-label">Host:</span><span class="info-value">${data.config.host}:${data.config.port}</span></div>
+            <div class="info-item"><span class="info-label">Database:</span><span class="info-value">${data.config.database}</span></div>
+            <div class="info-item"><span class="info-label">User:</span><span class="info-value">${data.config.user}</span></div>
+          `;
+        } else {
+          statusEl.className = 'status status-offline';
+          statusEl.textContent = 'Failed';
+          infoEl.innerHTML = `<span class="info-value" style="color:red">${data.error || 'Unknown error'}</span>`;
+        }
+      } catch (error) {
+        statusEl.className = 'status status-offline';
+        statusEl.textContent = 'Error';
+        infoEl.innerHTML = `<span class="info-value" style="color:red">${error.message}</span>`;
+      }
+    }
+
+    async function testConnection() {
+      const statusEl = document.getElementById('conn-status');
+      const resultEl = document.getElementById('connection-result');
+
+      statusEl.className = 'status status-loading';
+      statusEl.textContent = 'Testing...';
+      resultEl.innerHTML = '';
+
+      try {
+        const response = await fetch(`${API_BASE}/test/`);
+        const data = await response.json();
+
+        if (data.success) {
+          statusEl.className = 'status status-online';
+          statusEl.textContent = 'Online';
+
+          resultEl.innerHTML = `
+            <div class="result">
+✅ Connection Successful!
+
+📊 Database: ${data.database}
+🖥️ Host: ${data.host}:${data.port}
+📋 Tables Found: ${data.table_count}
+
+Tables (first 20):
+${data.tables.map(t => `  • ${t}`).join('\n')}
+            </div>
+          `;
+        } else {
+          statusEl.className = 'status status-offline';
+          statusEl.textContent = 'Failed';
+
+          resultEl.innerHTML = `
+            <div class="result error">
+❌ Connection Failed: ${data.error}
+            </div>
+          `;
+        }
+      } catch (error) {
+        statusEl.className = 'status status-offline';
+        statusEl.textContent = 'Error';
+        resultEl.innerHTML = `
+          <div class="result error">
+❌ Error: ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    async function loadTables() {
+      const statusEl = document.getElementById('tables-status');
+      const resultEl = document.getElementById('tables-result');
+
+      statusEl.className = 'status status-loading';
+      statusEl.textContent = 'Loading...';
+      resultEl.innerHTML = '';
+
+      try {
+        const response = await fetch(`${API_BASE}/tables/`);
+        const data = await response.json();
+
+        if (data.success && data.tables) {
+          statusEl.className = 'status status-online';
+          statusEl.textContent = `${data.count} tables`;
+
+          let html = `<div class="grid">`;
+          data.tables.slice(0, 20).forEach(table => {
+            html += `
+              <div class="card" style="margin:0; padding: 12px;">
+                <div style="font-weight:600; color: #4f46e5; margin-bottom: 8px;">${table.name}</div>
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${table.comment || 'No description'}</div>
+                <div style="font-size: 12px; color: #6b7280;">${table.column_count} columns</div>
+                <div style="font-size: 11px; color: #9ca3af;">PK: ${table.primary_keys.join(', ') || 'None'}</div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+
+          if (data.count > 20) {
+            html += `<p style="text-align: center; color: #666; margin-top: 12px;">... and ${data.count - 20} more tables</p>`;
+          }
+
+          resultEl.innerHTML = html;
+        } else {
+          statusEl.className = 'status status-offline';
+          statusEl.textContent = 'Failed';
+          resultEl.innerHTML = `<div class="result error">❌ ${data.error}</div>`;
+        }
+      } catch (error) {
+        statusEl.className = 'status status-offline';
+        statusEl.textContent = 'Error';
+        resultEl.innerHTML = `<div class="result error">❌ ${error.message}</div>`;
+      }
+    }
+
+    async function executeSQL() {
+      const sql = document.getElementById('sql-input').value.trim();
+      if (!sql) {
+        alert('Please enter a SQL query');
+        return;
+      }
+
+      const statusEl = document.getElementById('sql-status');
+      const resultEl = document.getElementById('sql-result');
+
+      statusEl.className = 'status status-loading';
+      statusEl.textContent = 'Executing...';
+      resultEl.innerHTML = '';
+
+      try {
+        const response = await fetch(`${API_BASE}/sql/execute/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sql })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          statusEl.className = 'status status-online';
+          statusEl.textContent = 'Success';
+
+          const displayData = data.data.slice(0, 50); // First 50 rows
+          resultEl.innerHTML = `
+            <div class="result">
+✅ Query Executed Successfully!
+
+📊 Rows Returned: ${data.rowCount}
+
+${displayData.length > 0 ?
+  '📄 Data Preview (first 50 rows):\n' +
+  JSON.stringify(displayData, null, 2).substring(0, 3000) +
+  (JSON.stringify(displayData, null, 2).length > 3000 ? '\n... (truncated)' : '')
+  : 'No data returned'}
+            </div>
+          `;
+        } else {
+          statusEl.className = 'status status-offline';
+          statusEl.textContent = 'Failed';
+          resultEl.innerHTML = `<div class="result error">❌ ${data.error}</div>`;
+        }
+      } catch (error) {
+        statusEl.className = 'status status-offline';
+        statusEl.textContent = 'Error';
+        resultEl.innerHTML = `<div class="result error">❌ ${error.message}</div>`;
+      }
+    }
+
+    function loadSampleSQL() {
+      document.getElementById('sql-input').value = `-- Sample SQL Query for YH Database
+-- Modify table_name and column names based on actual schema
+
+SELECT *
+FROM table_name
+ORDER BY date_column DESC
+LIMIT 10;`;
+    }
+
+    async function loadSummary() {
+      const statusEl = document.getElementById('summary-status');
+      const resultEl = document.getElementById('summary-result');
+
+      statusEl.className = 'status status-loading';
+      statusEl.textContent = 'Loading...';
+      resultEl.innerHTML = '';
+
+      try {
+        const response = await fetch(`${API_BASE}/summary/?days=90`);
+        const data = await response.json();
+
+        if (data.success) {
+          statusEl.className = 'status status-online';
+          statusEl.textContent = `Loaded (${data.days} days)`;
+
+          let html = '<div class="grid">';
+          for (const [tableName, info] of Object.entries(data.summary)) {
+            const errorClass = info.error ? 'error' : '';
+            html += `
+              <div class="card" style="margin: 0; padding: 12px;">
+                <div style="font-weight: 600; color: #4f46e5; margin-bottom: 4px;">${tableName}</div>
+                ${info.date_column ? `<div style="font-size: 11px; color: #666;">Date: ${info.date_column}</div>` : ''}
+                <div style="font-size: 12px;">${info.row_count || 0} rows</div>
+                ${info.latest_date ? `<div style="font-size: 11px; color: #10b981;">Latest: ${info.latest_date}</div>` : ''}
+                ${info.error ? `<div style="font-size: 11px; color: #dc2626;">Error: ${info.error}</div>` : ''}
+              </div>
+            `;
+          }
+          html += '</div>';
+
+          resultEl.innerHTML = html;
+        } else {
+          statusEl.className = 'status status-offline';
+          statusEl.textContent = 'Failed';
+          resultEl.innerHTML = `<div class="result error">❌ ${data.error}</div>`;
+        }
+      } catch (error) {
+        statusEl.className = 'status status-offline';
+        statusEl.textContent = 'Error';
+        resultEl.innerHTML = `<div class="result error">❌ ${error.message}</div>`;
+      }
+    }
+
+    // Auto-test on page load
+    window.onload = function() {
+      testConfig();
+    };
+  </script>
+</body>
+</html>
