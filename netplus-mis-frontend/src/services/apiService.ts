@@ -3,7 +3,7 @@
  * 백엔드 API와 통신하는 서비스
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // 공통 fetch 함수
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {

@@ -12,24 +12,33 @@ const ProductionPrediction: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1w');
 
-  useEffect(() => {
-    fetchProductionPredictions();
-  }, [selectedTimeRange]);
+  // 더미 데이터
+  const DUMMY_PREDICTIONS: PredictionResult[] = [
+    { kpi_code: 'PROD_001', kpi_name: '일일생산량예측', predicted_value: 5200, confidence: 0.91, horizon: '1주', model_used: 'LSTM', target_date: '2026-03-01' },
+    { kpi_code: 'PROD_002', kpi_name: '생산달성률예측', predicted_value: 94.5, confidence: 0.88, horizon: '1주', model_used: 'XGBoost', target_date: '2026-03-01' },
+    { kpi_code: 'PROD_003', kpi_name: '불량률예측', predicted_value: 2.1, confidence: 0.85, horizon: '1주', model_used: 'Random Forest', target_date: '2026-03-01' },
+    { kpi_code: 'PROD_004', kpi_name: 'OEE예측', predicted_value: 78.2, confidence: 0.82, horizon: '1주', model_used: 'LSTM', target_date: '2026-03-01' },
+    { kpi_code: 'PROD_005', kpi_name: '설비고장예측', predicted_value: 8.5, confidence: 0.75, horizon: '1주', model_used: 'Logistic Regression', target_date: '2026-03-01' },
+    { kpi_code: 'PROD_006', kpi_name: 'Cycle Time예측', predicted_value: 43.2, confidence: 0.89, horizon: '1주', model_used: 'Linear Regression', target_date: '2026-03-01' },
+  ];
 
-  const fetchProductionPredictions = async () => {
+  const DUMMY_HISTORICAL_DATA: HistoricalDataPoint[] = [
+    { date: '2026-02-08', production_quantity: 4800, defect_rate: 2.3, oee: 75.5 },
+    { date: '2026-02-12', production_quantity: 4950, defect_rate: 2.2, oee: 76.2 },
+    { date: '2026-02-15', production_quantity: 5100, defect_rate: 2.0, oee: 77.8 },
+    { date: '2026-02-19', production_quantity: 5050, defect_rate: 2.1, oee: 77.2 },
+    { date: '2026-02-22', production_quantity: 5150, defect_rate: 1.9, oee: 78.0 },
+  ];
+
+  useEffect(() => {
     setLoading(true);
-    setError(null);
-    try {
-      const response = await api.predictions.getProductionPredictions();
-      setPredictions(response.predictions || []);
-      setHistoricalData(response.historical_data || []);
-    } catch (err) {
-      setError('생산 예측 데이터를 불러오는데 실패했습니다.');
-      console.error(err);
-    } finally {
+    // 더미 데이터로 설정
+    setTimeout(() => {
+      setPredictions(DUMMY_PREDICTIONS);
+      setHistoricalData(DUMMY_HISTORICAL_DATA);
       setLoading(false);
-    }
-  };
+    }, 500);
+  }, [selectedTimeRange]);
 
   const timeRanges: { value: TimeRange; label: string }[] = [
     { value: '1d', label: '1일' },

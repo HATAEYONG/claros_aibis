@@ -12,24 +12,33 @@ const QualityPrediction: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1w');
 
-  useEffect(() => {
-    fetchQualityPredictions();
-  }, [selectedTimeRange]);
+  // 더미 데이터
+  const DUMMY_PREDICTIONS: PredictionResult[] = [
+    { kpi_code: 'QUAL_001', kpi_name: '불량률예측', predicted_value: 1.8, confidence: 0.90, horizon: '1주', model_used: 'Random Forest', target_date: '2026-03-01' },
+    { kpi_code: 'QUAL_002', kpi_name: 'Cpk예측', predicted_value: 1.45, confidence: 0.85, horizon: '1주', model_used: 'Linear Regression', target_date: '2026-03-01' },
+    { kpi_code: 'QUAL_003', kpi_name: '불량유형예측', predicted_value: 15, confidence: 0.78, horizon: '1주', model_used: 'XGBoost', target_date: '2026-03-01' },
+    { kpi_code: 'QUAL_004', kpi_name: '클레임발생예측', predicted_value: 2, confidence: 0.82, horizon: '1주', model_used: 'Logistic Regression', target_date: '2026-03-01' },
+    { kpi_code: 'QUAL_005', kpi_name: '검사시간예측', predicted_value: 25, confidence: 0.88, horizon: '1주', model_used: 'LSTM', target_date: '2026-03-01' },
+    { kpi_code: 'QUAL_006', kpi_name: '품질비용예측', predicted_value: 850, confidence: 0.80, horizon: '1주', model_used: 'ARIMA', target_date: '2026-03-01' },
+  ];
 
-  const fetchQualityPredictions = async () => {
+  const DUMMY_HISTORICAL_DATA: HistoricalDataPoint[] = [
+    { date: '2026-02-08', defect_rate: 2.1, cpk: 1.35, claim_count: 1 },
+    { date: '2026-02-12', defect_rate: 2.0, cpk: 1.38, claim_count: 2 },
+    { date: '2026-02-15', defect_rate: 1.9, cpk: 1.40, claim_count: 1 },
+    { date: '2026-02-19', defect_rate: 2.2, cpk: 1.32, claim_count: 3 },
+    { date: '2026-02-22', defect_rate: 1.8, cpk: 1.42, claim_count: 1 },
+  ];
+
+  useEffect(() => {
     setLoading(true);
-    setError(null);
-    try {
-      const response = await api.predictions.getQualityPredictions();
-      setPredictions(response.predictions || []);
-      setHistoricalData(response.historical_data || []);
-    } catch (err) {
-      setError('품질 예측 데이터를 불러오는데 실패했습니다.');
-      console.error(err);
-    } finally {
+    // 더미 데이터로 설정
+    setTimeout(() => {
+      setPredictions(DUMMY_PREDICTIONS);
+      setHistoricalData(DUMMY_HISTORICAL_DATA);
       setLoading(false);
-    }
-  };
+    }, 500);
+  }, [selectedTimeRange]);
 
   const timeRanges: { value: TimeRange; label: string }[] = [
     { value: '1d', label: '1일' },

@@ -31,6 +31,10 @@ export interface HistoricalDataPoint {
   stock_level?: number;
   turnover_rate?: number;
   depletion_days?: number;
+  inventory_days?: number;
+  stockout_count?: number;
+  excess_count?: number;
+  claim_count?: number;
 }
 
 // Category-based prediction response
@@ -41,8 +45,20 @@ export interface CategoryPredictionResponse {
   historical_data?: HistoricalDataPoint[];
 }
 
-// Prediction categories
-export type PredictionCategory = 'finance' | 'production' | 'quality' | 'inventory';
+// Prediction categories - 12개 도메인
+export type PredictionCategory =
+  | 'finance'      // 재무 예측
+  | 'production'   // 생산 예측
+  | 'quality'      // 품질 예측
+  | 'inventory'    // 재고 예측
+  | 'sales'        // 영업 예측
+  | 'equipment'    // 설비 예측
+  | 'customer'     // 고객 예측
+  | 'cost'         // 원가 예측
+  | 'purchase'     // 구매 예측
+  | 'logistics'    // 물류 예측
+  | 'hr'           // 인사 예측
+  | 'etc';         // 기타 예측
 
 // Prediction category metadata
 export interface PredictionCategoryInfo {

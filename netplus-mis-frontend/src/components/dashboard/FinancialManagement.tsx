@@ -4,6 +4,7 @@ import LoadingState from '@/components/common/LoadingState';
 import ErrorState from '@/components/common/ErrorState';
 import { ActivityIcon, TrendUpIcon, TrendDownIcon } from '@/components/icons/Icons';
 import api from '@/services/api';
+import dashboardDataService from '@/services/dashboardDataService';
 
 interface FinancialStatement {
   id: number;
@@ -43,6 +44,17 @@ const FinancialManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
+        // ERP 매핑 서비스 사용 (재무/회계 대시보드)
+        const financialRes = await dashboardDataService.dashboard.getFinancialDashboard({
+          fiscal_year: '2024',
+          fiscal_month: '12'
+        });
+
+        // ERP 매핑 데이터 변환 - 임시 처리
+        // TODO: 실제 ERP DB 연결 후 데이터 구조 맵핑 필요
+        const financialData = financialRes.results?.[0] || {};
+
+        // 기존 API를 백업으로 사용
         const res = await api.financial.getStatements('fiscal_year=2024&fiscal_month=12');
         setStatements(Array.isArray(res) ? res : res.results || []);
       } catch (err) {
@@ -56,7 +68,9 @@ const FinancialManagement: React.FC = () => {
   }, []);
 
   const getCurrentStatement = () => {
-    return statements.find(s => s.statement_type === activeTab);
+    // equity 탭의 경우 별도 타입이 없으므로 balance 타입 데이터를 사용
+    const searchType = activeTab === 'equity' ? 'balance' : activeTab;
+    return statements.find(s => s.statement_type === searchType);
   };
 
   const getTabTitle = () => {

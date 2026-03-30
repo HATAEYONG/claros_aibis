@@ -42,18 +42,6 @@ interface EnergyConsumption {
   cost: string;
 }
 
-interface FourM2EMetric {
-  id: number;
-  fiscal_year: number;
-  fiscal_month: number;
-  category: string;
-  metric_name: string;
-  target_value: string;
-  actual_value: string;
-  unit: string;
-  status: string;
-}
-
 interface EnvironmentalProject {
   id: number;
   project_id: string;
@@ -94,7 +82,6 @@ const ESG: React.FC = () => {
   const [scores, setScores] = useState<ESGScore[]>([]);
   const [carbon, setCarbon] = useState<CarbonEmission[]>([]);
   const [energy, setEnergy] = useState<EnergyConsumption[]>([]);
-  const [fourM2E, setFourM2E] = useState<FourM2EMetric[]>([]);
   const [projects, setProjects] = useState<EnvironmentalProject[]>([]);
   const [social, setSocial] = useState<SocialActivity[]>([]);
   const [governance, setGovernance] = useState<GovernanceMetric[]>([]);
@@ -104,11 +91,10 @@ const ESG: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const [scoresRes, carbonRes, energyRes, fourM2ERes, projectsRes, socialRes, govRes] = await Promise.all([
+        const [scoresRes, carbonRes, energyRes, projectsRes, socialRes, govRes] = await Promise.all([
           api.esg.getScores('fiscal_year=2024'),
           api.esg.getCarbon('fiscal_year=2024'),
           api.esg.getEnergy('fiscal_year=2024&fiscal_month=12'),
-          api.esg.get4M2E('fiscal_year=2024&fiscal_month=12'),
           api.esg.getProjects(),
           api.esg.getSocial('fiscal_year=2024'),
           api.esg.getGovernance('fiscal_year=2024'),
@@ -117,7 +103,6 @@ const ESG: React.FC = () => {
         setScores(Array.isArray(scoresRes) ? scoresRes : scoresRes.results || []);
         setCarbon(Array.isArray(carbonRes) ? carbonRes : carbonRes.results || []);
         setEnergy(Array.isArray(energyRes) ? energyRes : energyRes.results || []);
-        setFourM2E(Array.isArray(fourM2ERes) ? fourM2ERes : fourM2ERes.results || []);
         setProjects(Array.isArray(projectsRes) ? projectsRes : projectsRes.results || []);
         setSocial(Array.isArray(socialRes) ? socialRes : socialRes.results || []);
         setGovernance(Array.isArray(govRes) ? govRes : govRes.results || []);
@@ -207,31 +192,6 @@ const ESG: React.FC = () => {
     };
   };
 
-  // 4M2E 카테고리별 그룹화
-  const getFourM2EGrouped = () => {
-    const categoryLabels: Record<string, string> = {
-      'man': 'Man (인력)',
-      'machine': 'Machine (설비)',
-      'material': 'Material (자재)',
-      'method': 'Method (방법)',
-      'environment': 'Environment (환경)',
-      'energy': 'Energy (에너지)'
-    };
-
-    const grouped: Record<string, FourM2EMetric[]> = {};
-    fourM2E.forEach(m => {
-      const cat = m.category;
-      if (!grouped[cat]) grouped[cat] = [];
-      grouped[cat].push(m);
-    });
-
-    return Object.entries(grouped).map(([key, metrics]) => ({
-      category: categoryLabels[key] || key,
-      categoryKey: key,
-      metrics
-    }));
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'excellent': return 'bg-green-100 text-green-700';
@@ -288,18 +248,15 @@ const ESG: React.FC = () => {
   const totalSaving = projects.reduce((sum, p) => sum + parseFloat(p.saving || '0'), 0);
   const avgROI = totalInvestment > 0 ? (totalSaving / totalInvestment) * 100 : 0;
 
-  const fourM2EGrouped = getFourM2EGrouped();
-  const categoryColors = ['bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-yellow-600', 'bg-teal-600', 'bg-orange-600'];
-
   return (
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-xl shadow-lg p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
           <CheckIcon size={32} />
-          <h1 className="text-3xl font-bold">ESG / 4M2E 전략</h1>
+          <h1 className="text-3xl font-bold">ESG 전략</h1>
         </div>
-        <p className="text-green-100">환경·사회·지배구조와 생산 6대 요소를 통합 관리합니다</p>
+        <p className="text-green-100">환경·사회·지배구조를 통합 관리합니다</p>
       </div>
 
       {/* KPI 카드 */}
@@ -347,7 +304,7 @@ const ESG: React.FC = () => {
       {/* 카테고리 선택 */}
       <div className="bg-white rounded-xl shadow p-4">
         <div className="flex gap-2 overflow-x-auto">
-          {['all', 'esg', '4m2e', 'carbon', 'energy'].map((cat) => (
+          {['all', 'esg', 'carbon', 'energy'].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -359,7 +316,6 @@ const ESG: React.FC = () => {
             >
               {cat === 'all' && '전체'}
               {cat === 'esg' && 'ESG'}
-              {cat === '4m2e' && '4M2E'}
               {cat === 'carbon' && '탄소관리'}
               {cat === 'energy' && '에너지'}
             </button>
@@ -479,54 +435,6 @@ const ESG: React.FC = () => {
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* 4M2E 관리 */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <div className="mb-4">
-          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <ActivityIcon className="text-purple-600" size={24} />
-            4M2E 통합 관리
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">생산 6대 요소 성과</p>
-        </div>
-
-        <div className="space-y-4">
-          {fourM2EGrouped.map((group, idx) => (
-            <div key={idx} className="border rounded-lg p-4">
-              <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold ${categoryColors[idx] || 'bg-gray-600'}`}>
-                  {idx + 1}
-                </span>
-                {group.category}
-              </h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {group.metrics.map((metric, mIdx) => (
-                  <div key={mIdx} className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-sm font-medium text-gray-700">{metric.metric_name}</p>
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(metric.status)}`}>
-                        {getStatusLabel(metric.status)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-xs text-gray-500">목표: {parseFloat(metric.target_value).toFixed(1)}{metric.unit}</p>
-                        <p className="text-lg font-bold text-blue-600">{parseFloat(metric.actual_value).toFixed(1)}{metric.unit}</p>
-                      </div>
-                      <p className={`text-xs font-bold ${
-                        parseFloat(metric.actual_value) >= parseFloat(metric.target_value) ? 'text-green-600' : 'text-yellow-600'
-                      }`}>
-                        {parseFloat(metric.actual_value) >= parseFloat(metric.target_value) ? '달성' : '미달'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 

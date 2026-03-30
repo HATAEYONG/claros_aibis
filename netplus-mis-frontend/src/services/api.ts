@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';  // 빈 문자열 = 상대 경로 (nginx 프록시 사용)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';  // 백엔드 API 기본 URL
 
 interface LoginCredentials {
   username: string;

@@ -12,24 +12,33 @@ const FinancePrediction: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
 
-  useEffect(() => {
-    fetchFinancePredictions();
-  }, [selectedTimeRange]);
+  // 더미 데이터
+  const DUMMY_PREDICTIONS: PredictionResult[] = [
+    { kpi_code: 'FIN_001', kpi_name: '매출액예측', predicted_value: 15600000000, confidence: 0.92, horizon: '1개월', model_used: 'LSTM', target_date: '2026-03-22' },
+    { kpi_code: 'FIN_002', kpi_name: '영업이익예측', predicted_value: 1250000000, confidence: 0.88, horizon: '1개월', model_used: 'LSTM', target_date: '2026-03-22' },
+    { kpi_code: 'FIN_003', kpi_name: '당기순이익예측', predicted_value: 980000000, confidence: 0.85, horizon: '1개월', model_used: 'Random Forest', target_date: '2026-03-22' },
+    { kpi_code: 'FIN_004', kpi_name: '현금흐름예측', predicted_value: 2100000000, confidence: 0.90, horizon: '1개월', model_used: 'XGBoost', target_date: '2026-03-22' },
+    { kpi_code: 'FIN_005', kpi_name: 'ROE예측', predicted_value: 12.5, confidence: 0.82, horizon: '1개월', model_used: 'Linear Regression', target_date: '2026-03-22' },
+    { kpi_code: 'FIN_006', kpi_name: 'ROA예측', predicted_value: 8.2, confidence: 0.80, horizon: '1개월', model_used: 'Linear Regression', target_date: '2026-03-22' },
+  ];
 
-  const fetchFinancePredictions = async () => {
+  const DUMMY_HISTORICAL_DATA: HistoricalDataPoint[] = [
+    { date: '2026-01-22', revenue: 14200000000, operating_profit: 1120000000 },
+    { date: '2026-02-05', revenue: 14500000000, operating_profit: 1150000000 },
+    { date: '2026-02-12', revenue: 14800000000, operating_profit: 1180000000 },
+    { date: '2026-02-19', revenue: 15000000000, operating_profit: 1200000000 },
+    { date: '2026-02-22', revenue: 15200000000, operating_profit: 1230000000 },
+  ];
+
+  useEffect(() => {
     setLoading(true);
-    setError(null);
-    try {
-      const response = await api.predictions.getFinancePredictions();
-      setPredictions(response.predictions || []);
-      setHistoricalData(response.historical_data || []);
-    } catch (err) {
-      setError('매출/재무 예측 데이터를 불러오는데 실패했습니다.');
-      console.error(err);
-    } finally {
+    // 더미 데이터로 설정
+    setTimeout(() => {
+      setPredictions(DUMMY_PREDICTIONS);
+      setHistoricalData(DUMMY_HISTORICAL_DATA);
       setLoading(false);
-    }
-  };
+    }, 500);
+  }, [selectedTimeRange]);
 
   const timeRanges: { value: TimeRange; label: string }[] = [
     { value: '1d', label: '1일' },

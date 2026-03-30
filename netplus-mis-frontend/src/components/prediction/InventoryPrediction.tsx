@@ -12,24 +12,33 @@ const InventoryPrediction: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1w');
 
-  useEffect(() => {
-    fetchInventoryPredictions();
-  }, [selectedTimeRange]);
+  // 더미 데이터
+  const DUMMY_PREDICTIONS: PredictionResult[] = [
+    { kpi_code: 'INV_001', kpi_name: '재고소진일수예측', predicted_value: 8.5, confidence: 0.88, horizon: '1주', model_used: 'LSTM', target_date: '2026-03-01' },
+    { kpi_code: 'INV_002', kpi_name: '재고부족예측', predicted_value: 3, confidence: 0.75, horizon: '1주', model_used: 'XGBoost', target_date: '2026-03-01' },
+    { kpi_code: 'INV_003', kpi_name: '과잉재고예측', predicted_value: 12, confidence: 0.82, horizon: '1주', model_used: 'Random Forest', target_date: '2026-03-01' },
+    { kpi_code: 'INV_004', kpi_name: '재고회전율예측', predicted_value: 7.8, confidence: 0.85, horizon: '1주', model_used: 'Linear Regression', target_date: '2026-03-01' },
+    { kpi_code: 'INV_005', kpi_name: '입고예측', predicted_value: 15000, confidence: 0.92, horizon: '1주', model_used: 'ARIMA', target_date: '2026-03-01' },
+    { kpi_code: 'INV_006', kpi_name: '출고예측', predicted_value: 14800, confidence: 0.90, horizon: '1주', model_used: 'LSTM', target_date: '2026-03-01' },
+  ];
 
-  const fetchInventoryPredictions = async () => {
+  const DUMMY_HISTORICAL_DATA: HistoricalDataPoint[] = [
+    { date: '2026-02-08', inventory_days: 9.2, stockout_count: 2, excess_count: 10 },
+    { date: '2026-02-12', inventory_days: 8.8, stockout_count: 3, excess_count: 11 },
+    { date: '2026-02-15', inventory_days: 8.5, stockout_count: 2, excess_count: 12 },
+    { date: '2026-02-19', inventory_days: 8.3, stockout_count: 4, excess_count: 13 },
+    { date: '2026-02-22', inventory_days: 8.0, stockout_count: 3, excess_count: 14 },
+  ];
+
+  useEffect(() => {
     setLoading(true);
-    setError(null);
-    try {
-      const response = await api.predictions.getInventoryPredictions();
-      setPredictions(response.predictions || []);
-      setHistoricalData(response.historical_data || []);
-    } catch (err) {
-      setError('재고 예측 데이터를 불러오는데 실패했습니다.');
-      console.error(err);
-    } finally {
+    // 더미 데이터로 설정
+    setTimeout(() => {
+      setPredictions(DUMMY_PREDICTIONS);
+      setHistoricalData(DUMMY_HISTORICAL_DATA);
       setLoading(false);
-    }
-  };
+    }, 500);
+  }, [selectedTimeRange]);
 
   const timeRanges: { value: TimeRange; label: string }[] = [
     { value: '1d', label: '1일' },

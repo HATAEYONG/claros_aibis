@@ -12,6 +12,7 @@ import {
   ZapIcon
 } from '@/components/icons/Icons';
 import api from '@/services/api';
+import dashboardDataService from '@/services/dashboardDataService';
 
 interface QualityInspection {
   id: number;
@@ -66,6 +67,16 @@ const Quality: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
+        // ERP 매핑 서비스 사용 (품질 관리 대시보드)
+        const qualityRes = await dashboardDataService.dashboard.getQualityDashboard({
+          date: new Date().toISOString().split('T')[0]
+        });
+
+        // ERP 매핑 데이터 변환 - 임시 처리
+        // TODO: 실제 ERP DB 연결 후 데이터 구조 맵핑 필요
+        const qualityData = qualityRes.results?.[0] || {};
+
+        // 기존 API를 백업으로 사용
         const [inspRes, complaintsRes, cpkRes, statsRes, analysisRes] = await Promise.all([
           api.quality.getInspections(),
           api.quality.getComplaints(),

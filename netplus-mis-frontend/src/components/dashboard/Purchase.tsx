@@ -12,6 +12,7 @@ import {
   ActivityIcon
 } from '@/components/icons/Icons';
 import api from '@/services/api';
+import dashboardDataService from '@/services/dashboardDataService';
 
 interface MonthlyPurchase {
   id: number;
@@ -87,6 +88,16 @@ const Purchase: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
+        // ERP 매핑 서비스 사용 (구매/자재 관리 대시보드)
+        const procurementRes = await dashboardDataService.dashboard.getProcurementDashboard({
+          date: new Date().toISOString().split('T')[0]
+        });
+
+        // ERP 매핑 데이터 변환 - 임시 처리
+        // TODO: 실제 ERP DB 연결 후 데이터 구조 맵핑 필요
+        const procurementData = procurementRes.results?.[0] || {};
+
+        // 기존 API를 백업으로 사용
         const [monthlyRes, invRes, ordersRes, suppliersRes, turnoverRes] = await Promise.all([
           api.purchase.getMonthly('fiscal_year=2024'),
           api.purchase.getInventory(),
