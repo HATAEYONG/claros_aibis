@@ -1,14 +1,53 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import (
-    ERPSalesYearPlan, ERPShipmentPlan, ERPShipmentPlanItem, ERPDeliveryHistory,
-    ERPBOM, ERPMRP, ERPMRPMaterial, ERPProductionResult, ERPMESData,
-    ERPQualityItem, ERPShipmentInspection, ERPShipmentDefect,
-    ERPSupplier, ERPSupplierEvaluation, ERPSPC,
-    ERPBarcodeDelivery, ERPMaterialPlan, ERPInventoryCheck,
-    ERPLocation, ERPLocationStock,
-    ERPWorkInProcess, ERPProductLedger, ERPAccountLedger,
-    ERPSyncLog, ERPSyncConfig
+import importlib.util
+import os
+
+# 기존 모델 import - models.py 파일을 직접 로드
+# models/ 디렉토리와 models.py가 공존하므로, models.py를 직접 import
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_models_py_path = os.path.join(_current_dir, 'models.py')
+
+spec = importlib.util.spec_from_file_location("erp_sync.models_legacy", _models_py_path)
+legacy_models = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(legacy_models)
+
+# 기존 모델들을 namespace에 추가
+ERPSalesYearPlan = legacy_models.ERPSalesYearPlan
+ERPShipmentPlan = legacy_models.ERPShipmentPlan
+ERPShipmentPlanItem = legacy_models.ERPShipmentPlanItem
+ERPDeliveryHistory = legacy_models.ERPDeliveryHistory
+ERPBOM = legacy_models.ERPBOM
+ERPMRP = legacy_models.ERPMRP
+ERPMRPMaterial = legacy_models.ERPMRPMaterial
+ERPProductionResult = legacy_models.ERPProductionResult
+ERPMESData = legacy_models.ERPMESData
+ERPQualityItem = legacy_models.ERPQualityItem
+ERPShipmentInspection = legacy_models.ERPShipmentInspection
+ERPShipmentDefect = legacy_models.ERPShipmentDefect
+ERPSupplier = legacy_models.ERPSupplier
+ERPSupplierEvaluation = legacy_models.ERPSupplierEvaluation
+ERPSPC = legacy_models.ERPSPC
+ERPBarcodeDelivery = legacy_models.ERPBarcodeDelivery
+ERPMaterialPlan = legacy_models.ERPMaterialPlan
+ERPInventoryCheck = legacy_models.ERPInventoryCheck
+ERPLocation = legacy_models.ERPLocation
+ERPLocationStock = legacy_models.ERPLocationStock
+ERPWorkInProcess = legacy_models.ERPWorkInProcess
+ERPProductLedger = legacy_models.ERPProductLedger
+ERPAccountLedger = legacy_models.ERPAccountLedger
+ERPSyncLog = legacy_models.ERPSyncLog
+ERPSyncConfig = legacy_models.ERPSyncConfig
+
+# 신규 매핑 관리 모델 import
+from erp_sync.models import (
+    ERPSource,
+    ERPTableDefinition,
+    ERPFieldDefinition,
+    ERPTargetModel,
+    ERPTargetField,
+    ERPTableMapping,
+    ERPFieldMapping,
 )
 
 

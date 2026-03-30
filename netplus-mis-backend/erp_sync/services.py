@@ -35,13 +35,15 @@ class ERPConnectionManager:
         import os
         from django.conf import settings
 
-        # 환경변수에서 설정 읽기
-        server = os.environ.get('ERP_DB_SERVER', getattr(settings, 'ERP_DB_SERVER', ''))
-        database = os.environ.get('ERP_DB_NAME', getattr(settings, 'ERP_DB_NAME', ''))
-        user = os.environ.get('ERP_DB_USER', getattr(settings, 'ERP_DB_USER', ''))
-        password = os.environ.get('ERP_DB_PASSWORD', getattr(settings, 'ERP_DB_PASSWORD', ''))
-        port = os.environ.get('ERP_DB_PORT', getattr(settings, 'ERP_DB_PORT', '1433'))
-        driver = os.environ.get('ERP_DB_DRIVER', getattr(settings, 'ERP_DB_DRIVER', 'ODBC Driver 17 for SQL Server'))
+        # 환경변수에서 설정 읽기 (settings의 MSSQL_CONFIG 우선)
+        server = os.environ.get('MSSQL_HOST', getattr(settings, 'MSSQL_CONFIG', {}).get('host', ''))
+        port = os.environ.get('MSSQL_PORT', str(getattr(settings, 'MSSQL_CONFIG', {}).get('port', '1433')))
+        database = os.environ.get('MSSQL_DATABASE', getattr(settings, 'MSSQL_CONFIG', {}).get('database', ''))
+        user = os.environ.get('MSSQL_USER', getattr(settings, 'MSSQL_CONFIG', {}).get('user', ''))
+        password = os.environ.get('MSSQL_PASSWORD', getattr(settings, 'MSSQL_CONFIG', {}).get('password', ''))
+        driver = os.environ.get('MSSQL_DRIVER', getattr(settings, 'MSSQL_CONFIG', {}).get('driver', 'ODBC Driver 17 for SQL Server'))
+        encrypt = getattr(settings, 'MSSQL_CONFIG', {}).get('encrypt', 'no')
+        trust_cert = getattr(settings, 'MSSQL_CONFIG', {}).get('trust_server_certificate', 'yes')
 
         # pyodbc 연결 문자열 생성
         connection_string = (
@@ -50,7 +52,8 @@ class ERPConnectionManager:
             f"DATABASE={database};"
             f"UID={user};"
             f"PWD={password};"
-            f"TrustServerCertificate=yes;"
+            f"TrustServerCertificate={trust_cert};"
+            f"Encrypt={encrypt};"
         )
 
         return connection_string
@@ -92,6 +95,46 @@ class ERPConnectionManager:
             results = []
             for row in cursor.fetchall():
                 results.append(dict(zip(columns, row)))
+
+            return results
+        finally:
+            cursor.close()
+
+    def execute_batch_query(self, query: str, params: tuple = None, batch_size: int = None) -> List[Dict]:
+        """대량 데이터 쿼리 실행 (배치 처리 - 적응형 배치 크기 지원)"""
+        from django.conf import settings
+
+        # Use adaptive batch size if enabled and not specified
+        if batch_size is None and getattr(settings, 'ADAPTIVE_BATCH_ENABLED', False):
+            try:
+                from utils.adaptive_batch import get_adaptive_batch_size
+                batch_size = get_adaptive_batch_size()
+                logger.info(f"Using adaptive batch size: {batch_size}")
+            except Exception as e:
+                logger.warning(f"Adaptive batch sizing failed, using default: {e}")
+                batch_size = getattr(settings, 'SYNC_BATCH_SIZE', 1000)
+        elif batch_size is None:
+            batch_size = getattr(settings, 'SYNC_BATCH_SIZE', 1000)
+
+        if not self._connection:
+            self.connect()
+
+        cursor = self._connection.cursor()
+        try:
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+
+            columns = [column[0] for column in cursor.description]
+            results = []
+
+            while True:
+                rows = cursor.fetchmany(batch_size)
+                if not rows:
+                    break
+                for row in rows:
+                    results.append(dict(zip(columns, row)))
 
             return results
         finally:
@@ -247,6 +290,16 @@ class ERPSyncService:
         )
 
         try:
+            # Get adaptive batch size
+            batch_size = None
+            if getattr(settings, 'ADAPTIVE_BATCH_ENABLED', False):
+                try:
+                    from utils.adaptive_batch import get_adaptive_batch_size
+                    batch_size = get_adaptive_batch_size()
+                    logger.info(f"Using adaptive batch size: {batch_size}")
+                except Exception as e:
+                    logger.warning(f"Adaptive batch sizing failed: {e}")
+
             # 마지막 동기화 시간 결정
             if sync_type == 'full':
                 since = datetime(2000, 1, 1)
@@ -299,6 +352,21 @@ class ERPSyncService:
             sync_log.finished_at = timezone.now()
             sync_log.save()
 
+            # Record batch success/failure for adaptive sizing
+            if batch_size:
+                if error_count == 0:
+                    try:
+                        from utils.adaptive_batch import record_batch_success
+                        record_batch_success(batch_size)
+                    except Exception as e:
+                        logger.warning(f"Failed to record batch success: {e}")
+                else:
+                    try:
+                        from utils.adaptive_batch import record_batch_failure
+                        record_batch_failure(batch_size, Exception(f"{error_count} errors"))
+                    except Exception as e:
+                        logger.warning(f"Failed to record batch failure: {e}")
+
             logger.info(f"동기화 완료 - {table_name}: {success_count}건 성공, {error_count}건 오류")
 
         except Exception as e:
@@ -307,6 +375,14 @@ class ERPSyncService:
             sync_log.finished_at = timezone.now()
             sync_log.save()
             logger.error(f"동기화 실패 - {table_name}: {e}")
+
+            # Record batch failure for adaptive sizing
+            try:
+                from utils.adaptive_batch import record_batch_failure
+                record_batch_failure(getattr(settings, 'SYNC_BATCH_SIZE', 1000), e)
+            except Exception:
+                pass
+
             raise
 
         return sync_log
@@ -508,3 +584,366 @@ def create_sync_tasks():
     except ImportError:
         logger.warning("Celery가 설치되지 않았습니다. 동기 방식으로만 동작합니다.")
         return {}
+
+
+# ============================================================
+# FOM ERP 동기화 서비스 (SQLite 중계 방식)
+# ============================================================
+
+class FOMERPSyncService:
+    """
+    FOM ERP 동기화 서비스
+    MS-SQL -> SQLite -> PostgreSQL (2단계 동기화)
+    """
+
+    # FOM ERP 테이블 매핑
+    TABLE_MAPPINGS = {
+        'PPC100': {
+            'model': 'FOMProductionData',
+            'source_columns': ['work_dt', 'fac_cd', 'wc_cd', 'itm_id', 'req_qty',
+                             'out_qty', 'good_qty', 'bad_qty', 'pw_tm', 'stop_tm'],
+            'target_columns': ['work_date', 'plant', 'line', 'product_id', 'qty_plan',
+                             'qty_actual', 'qty_good', 'qty_bad', 'work_hours', 'downtime'],
+            'key_columns': ['work_dt', 'fac_cd', 'wc_cd', 'itm_id'],
+            'date_column': 'work_dt',
+            'sync_priority': 1,
+        },
+        'INV100': {
+            'model': 'FOMInventoryData',
+            'source_columns': ['INV_DT', 'WH_CD', 'LOC_CD', 'ITEM_CD', 'ITEM_NM',
+                             'LOT_NO', 'ONHAND_QTY', 'AVAIL_QTY', 'RSV_QTY',
+                             'UNIT_COST', 'TTL_VALUE', 'SAFE_STOCK', 'ROP_POINT'],
+            'target_columns': ['inventory_date', 'warehouse', 'location', 'product_id',
+                             'product_name', 'lot_no', 'qty_on_hand', 'qty_available',
+                             'qty_reserved', 'unit_cost', 'total_value', 'safety_stock',
+                             'reorder_point'],
+            'key_columns': ['INV_DT', 'WH_CD', 'LOC_CD', 'ITEM_CD'],
+            'date_column': 'INV_DT',
+            'sync_priority': 1,
+        },
+        'QUA100': {
+            'model': 'FOMQualityData',
+            'source_columns': ['INSP_DT', 'INSP_TYPE', 'ITEM_CD', 'ITEM_NM',
+                             'LOT_NO', 'INSP_QTY', 'PASS_QTY', 'FAIL_QTY', 'REWORK_QTY',
+                             'DFT_TYPE', 'DFT_CAUSE', 'DFT_RATE', 'INSP_ID'],
+            'target_columns': ['inspection_date', 'inspection_type', 'product_id',
+                             'product_name', 'lot_no', 'qty_inspected', 'qty_passed',
+                             'qty_failed', 'qty_rework', 'defect_type', 'defect_cause',
+                             'defect_rate', 'inspector'],
+            'key_columns': ['INSP_DT', 'INSP_TYPE', 'ITEM_CD', 'LOT_NO'],
+            'date_column': 'INSP_DT',
+            'sync_priority': 1,
+        },
+        'FAC300': {
+            'model': 'FOMEquipmentData',
+            'source_columns': ['OPR_DT', 'EQP_ID', 'EQP_NM', 'PLANT_CD', 'LINE_CD',
+                             'PLAN_TM', 'ACT_TM', 'DOWN_TM', 'FAIL_CNT', 'FAIL_TM',
+                             'OUT_QTY', 'DFT_QTY', 'AVAIL_RT', 'PERF_RT', 'QUAL_RT', 'OEE_RT'],
+            'target_columns': ['operation_date', 'equipment_id', 'equipment_name',
+                             'plant', 'line', 'planned_time', 'actual_time', 'downtime',
+                             'failure_count', 'failure_time', 'output_qty', 'defect_qty',
+                             'availability', 'performance', 'quality_rate', 'oee'],
+            'key_columns': ['OPR_DT', 'EQP_ID'],
+            'date_column': 'OPR_DT',
+            'sync_priority': 2,
+        },
+        'ACC200': {
+            'model': 'FOMCostData',
+            'source_columns': ['COST_MM', 'ITEM_CD', 'ITEM_NM', 'COST_CC',
+                             'MTL_COST', 'LBR_COST', 'Ovh_COST', 'UNIT_COST',
+                             'STD_COST', 'VAR_AMT', 'VAR_RT', 'OUT_QTY', 'TTL_COST'],
+            'target_columns': ['cost_month', 'product_id', 'product_name', 'cost_center',
+                             'material_cost', 'labor_cost', 'overhead_cost', 'unit_cost',
+                             'standard_cost', 'variance', 'variance_rate', 'output_qty',
+                             'total_cost'],
+            'key_columns': ['COST_MM', 'ITEM_CD', 'COST_CC'],
+            'date_column': 'COST_MM',
+            'sync_priority': 3,
+        },
+        'FIN300': {
+            'model': 'FOMFinanceData',
+            'source_columns': ['FSC_MM', 'ACCT_TP', 'ACCT_CD', 'ACCT_NM',
+                             'AMT', 'PREV_AMT', 'REV_AMT', 'COGS_AMT',
+                             'GR_PROF', 'OP_PROF', 'NET_PROF'],
+            'target_columns': ['fiscal_month', 'account_type', 'account_code',
+                             'account_name', 'amount', 'prev_amount', 'revenue',
+                             'cogs', 'gross_profit', 'operating_profit', 'net_profit'],
+            'key_columns': ['FSC_MM', 'ACCT_CD'],
+            'date_column': 'FSC_MM',
+            'sync_priority': 4,
+        },
+        'MAT100': {
+            'model': 'FOMProductMaster',
+            'source_columns': ['ITEM_CD', 'ITEM_NM', 'ITEM_EN_NM', 'CAT_CD',
+                             'ITEM_TP', 'ITEM_GP', 'SPEC_DESC', 'UNIT_CD',
+                             'WEIGHT', 'STD_COST', 'SEL_PRICE', 'USE_YN'],
+            'target_columns': ['product_id', 'product_name', 'product_name_en',
+                             'category', 'product_type', 'product_group',
+                             'specification', 'unit', 'weight', 'standard_cost',
+                             'selling_price', 'is_active'],
+            'key_columns': ['ITEM_CD'],
+            'date_column': None,
+            'sync_priority': 2,
+        },
+        'FAC200': {
+            'model': 'FOMEquipmentMaster',
+            'source_columns': ['EQP_ID', 'EQP_NM', 'PLANT_CD', 'LINE_CD',
+                             'LOC_DESC', 'MAKER_NM', 'MODEL_NM', 'CAP_VAL',
+                             'INST_DT', 'ACQ_COST', 'DEPR_COST', 'STATUS_CD'],
+            'target_columns': ['equipment_id', 'equipment_name', 'plant', 'line',
+                             'location', 'manufacturer', 'model', 'capacity',
+                             'install_date', 'acquisition_cost', 'depreciation_cost',
+                             'status'],
+            'key_columns': ['EQP_ID'],
+            'date_column': None,
+            'sync_priority': 3,
+        },
+        'MAT200': {
+            'model': 'FOMBOMData',
+            'source_columns': ['PAR_ITEM', 'CHD_ITEM', 'REQ_QTY', 'UNIT_CD',
+                             'BOM_LVL', 'SEQ_NO', 'SUB_YN', 'SUB_FOR',
+                             'VAL_FR', 'VAL_TO', 'USE_YN'],
+            'target_columns': ['parent_product', 'child_product', 'quantity',
+                             'unit', 'level', 'sequence', 'is_substitute',
+                             'substitute_for', 'valid_from', 'valid_to', 'is_active'],
+            'key_columns': ['PAR_ITEM', 'CHD_ITEM', 'SEQ_NO'],
+            'date_column': None,
+            'sync_priority': 3,
+        },
+    }
+
+    def __init__(self, erp_connection: ERPConnectionManager = None):
+        self.erp_conn = erp_connection or ERPConnectionManager()
+        self.stats = {
+            'total_rows': 0,
+            'inserted': 0,
+            'updated': 0,
+            'failed': 0,
+            'start_time': None,
+            'end_time': None
+        }
+
+    def sync_table(self, source_table: str, days_back: int = 30) -> Dict[str, int]:
+        """단일 테이블 동기화 (MS-SQL -> PostgreSQL)"""
+        if source_table not in self.TABLE_MAPPINGS:
+            raise ValueError(f"알 수 없는 테이블: {source_table}")
+
+        mapping_info = self.TABLE_MAPPINGS[source_table]
+        model_name = mapping_info['model']
+
+        # 모델 클래스 동적 임포트
+        from .models import (
+            FOMProductionData, FOMInventoryData, FOMQualityData, FOMEquipmentData,
+            FOMCostData, FOMFinanceData, FOMProductMaster, FOMEquipmentMaster, FOMBOMData
+        )
+        model_map = {
+            'FOMProductionData': FOMProductionData,
+            'FOMInventoryData': FOMInventoryData,
+            'FOMQualityData': FOMQualityData,
+            'FOMEquipmentData': FOMEquipmentData,
+            'FOMCostData': FOMCostData,
+            'FOMFinanceData': FOMFinanceData,
+            'FOMProductMaster': FOMProductMaster,
+            'FOMEquipmentMaster': FOMEquipmentMaster,
+            'FOMBOMData': FOMBOMData,
+        }
+        model_class = model_map.get(model_name)
+        if not model_class:
+            raise ValueError(f"모델을 찾을 수 없습니다: {model_name}")
+
+        logger.info(f"[SYNC] Starting: {source_table} -> {model_name}")
+
+        # 마지막 동기화 시간 확인
+        last_sync = self._get_last_sync_time(source_table)
+
+        # SELECT 쿼리 생성
+        source_columns = mapping_info['source_columns']
+        select_query = f"SELECT {', '.join(source_columns)} FROM [{source_table}]"
+
+        # 날짜 필터 추가
+        if last_sync and mapping_info['date_column']:
+            date_column = mapping_info['date_column']
+            select_query += f" WHERE {date_column} >= DATEADD(day, -{days_back}, GETDATE())"
+            logger.info(f"   Date range: from {last_sync.strftime('%Y-%m-%d')}")
+
+        results = {'inserted': 0, 'updated': 0, 'failed': 0}
+
+        try:
+            with self.erp_conn as conn:
+                data_rows = conn.execute_batch_query(select_query, batch_size=1000)
+
+                # 데이터 변환 및 저장
+                with transaction.atomic():
+                    for row in data_rows:
+                        try:
+                            # 컬럼 매핑
+                            mapped_data = {}
+                            for src_col, tgt_col in zip(source_columns, mapping_info['target_columns']):
+                                mapped_data[tgt_col] = row.get(src_col)
+
+                            # 키 필드 추출
+                            key_kwargs = {}
+                            for key_col in mapping_info['key_columns']:
+                                idx = source_columns.index(key_col)
+                                tgt_col = mapping_info['target_columns'][idx]
+                                key_kwargs[tgt_col] = row.get(key_col)
+
+                            # 동기화 메타데이터 추가
+                            mapped_data['erp_source_table'] = source_table
+                            mapped_data['erp_sync_at'] = timezone.now()
+                            mapped_data['is_synced'] = True
+
+                            # 데이터 정리 (NULL 값 처리)
+                            mapped_data = self._clean_mapped_data(mapped_data, model_class)
+
+                            # upsert
+                            obj, created = model_class.objects.update_or_create(
+                                defaults=mapped_data,
+                                **key_kwargs
+                            )
+
+                            if created:
+                                results['inserted'] += 1
+                            else:
+                                results['updated'] += 1
+
+                        except Exception as e:
+                            logger.error(f"   Row sync failed: {e}")
+                            results['failed'] += 1
+
+                    # 동기화 설정 업데이트
+                    from .models import ERPSyncConfig
+                    ERPSyncConfig.objects.update_or_create(
+                        erp_table=source_table,
+                        defaults={
+                            'mis_model': f'erp_sync.{model_name}',
+                            'last_sync_at': timezone.now(),
+                        }
+                    )
+
+        except Exception as e:
+            logger.error(f"[FAIL] Table sync failed ({source_table}): {e}")
+            raise
+
+        logger.info(f"[OK] {source_table} sync complete: +{results['inserted']}, ~{results['updated']}, fail:{results['failed']}")
+        return results
+
+    def sync_all(self, days_back: int = 30) -> Dict[str, Dict]:
+        """모든 테이블 동기화"""
+        self.stats['start_time'] = timezone.now()
+
+        logger.info("=" * 60)
+        logger.info(f"Starting full FOM ERP sync - {len(self.TABLE_MAPPINGS)} tables")
+        logger.info("=" * 60)
+
+        all_results = {}
+
+        # 우선순위별 정렬
+        tables_by_priority = {}
+        for table, config in self.TABLE_MAPPINGS.items():
+            priority = config['sync_priority']
+            if priority not in tables_by_priority:
+                tables_by_priority[priority] = []
+            tables_by_priority[priority].append(table)
+
+        # 우선순위 순서대로 동기화
+        for priority in sorted(tables_by_priority.keys()):
+            for table in tables_by_priority[priority]:
+                try:
+                    results = self.sync_table(table, days_back)
+                    all_results[table] = results
+                except Exception as e:
+                    logger.error(f"Table sync failed - {table}: {e}")
+                    all_results[table] = {'inserted': 0, 'updated': 0, 'failed': 1}
+
+        self.stats['end_time'] = timezone.now()
+        duration = (self.stats['end_time'] - self.stats['start_time']).total_seconds()
+
+        logger.info("=" * 60)
+        logger.info(f"Full sync complete - Duration: {duration:.2f}s")
+        logger.info("=" * 60)
+
+        return all_results
+
+    def sync_by_priority(self, priority: int, days_back: int = 30) -> Dict[str, Dict]:
+        """우선순위별 동기화"""
+        results = {}
+        for table, config in self.TABLE_MAPPINGS.items():
+            if config['sync_priority'] == priority:
+                try:
+                    result = self.sync_table(table, days_back)
+                    results[table] = result
+                except Exception as e:
+                    logger.error(f"Priority {priority} sync failed - {table}: {e}")
+                    results[table] = {'inserted': 0, 'updated': 0, 'failed': 1}
+        return results
+
+    def _get_last_sync_time(self, table_name: str) -> Optional[datetime]:
+        """마지막 동기화 시간 조회"""
+        try:
+            from .models import ERPSyncConfig
+            config = ERPSyncConfig.objects.filter(erp_table=table_name).first()
+            if config and config.last_sync_at:
+                return config.last_sync_at
+        except Exception as e:
+            logger.warning(f"Last sync time not found for {table_name}: {e}")
+        return None
+
+    def _clean_mapped_data(self, mapped_data: dict, model_class) -> dict:
+        """매핑된 데이터 정리 - NULL 값을 기본값으로 변환"""
+        from decimal import Decimal
+
+        cleaned = {}
+        model_fields = {f.name: f for f in model_class._meta.get_fields()}
+
+        for key, value in mapped_data.items():
+            if key not in model_fields:
+                continue
+
+            field = model_fields[key]
+
+            # NULL 값 처리
+            if value is None:
+                # DecimalField/IntegerField: 0으로 변환
+                if field.__class__.__name__ in ('DecimalField', 'IntegerField'):
+                    cleaned[key] = Decimal('0') if field.__class__.__name__ == 'DecimalField' else 0
+                # CharField/TextField: 빈 문자열
+                elif field.__class__.__name__ in ('CharField', 'TextField'):
+                    cleaned[key] = ''
+                # DateField/DateTimeField: None 허용
+                elif field.null:
+                    cleaned[key] = None
+                # 기타: 기본값 사용
+                elif hasattr(field, 'default'):
+                    cleaned[key] = field.default if not callable(field.default) else field.default()
+                else:
+                    cleaned[key] = None
+            else:
+                cleaned[key] = value
+
+        return cleaned
+
+    def get_sync_status(self) -> Dict[str, Dict]:
+        """동기화 상태 조회"""
+        from .models import ERPSyncConfig
+
+        status = {}
+        for table in self.TABLE_MAPPINGS.keys():
+            try:
+                config = ERPSyncConfig.objects.filter(erp_table=table).first()
+                if config:
+                    status[table] = {
+                        'last_sync': config.last_sync_at,
+                        'is_active': config.is_active,
+                        'interval': config.sync_interval,
+                        'priority': self.TABLE_MAPPINGS[table]['sync_priority'],
+                    }
+                else:
+                    status[table] = {
+                        'last_sync': None,
+                        'is_active': False,
+                        'priority': self.TABLE_MAPPINGS[table]['sync_priority'],
+                    }
+            except Exception as e:
+                status[table] = {'error': str(e)}
+        return status
