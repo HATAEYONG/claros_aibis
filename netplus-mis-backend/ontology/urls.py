@@ -12,6 +12,10 @@ from .views import (
     CostToESGTraceAPIView,
     OntologyGraphAPIView,
     OntologyDashboardAPIView,
+    kg_stats,
+    kg_nodes,
+    kg_query,
+    kg_search,
 )
 
 router = DefaultRouter()
@@ -32,4 +36,10 @@ urlpatterns = [
     path('trace/cost-to-esg/<str:cost_mon>/', CostToESGTraceAPIView.as_view(), name='cost-to-esg-trace'),
     path('graph/', OntologyGraphAPIView.as_view(), name='ontology-graph'),
     path('dashboard/', OntologyDashboardAPIView.as_view(), name='ontology-dashboard'),
+
+    # 지식 그래프 API 엔드포인트 (Phase 7)
+    path('kg/stats/', kg_stats, name='knowledge-graph-stats'),
+    path('kg/nodes/', kg_nodes, name='knowledge-graph-nodes'),
+    path('kg/query/', kg_query, name='knowledge-graph-query'),
+    path('kg/search/', kg_search, name='knowledge-graph-search'),
 ]

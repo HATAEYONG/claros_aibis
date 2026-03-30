@@ -1,7 +1,8 @@
 from rest_framework import viewsets, filters, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import permissions
 from django_filters.rest_framework import DjangoFilterBackend
 from datetime import date, datetime
 import time
@@ -12,7 +13,9 @@ from .models import (
     ERPTableMapping,
     OntologyRelation,
     DataFlowMetrics,
-    OntologyAnalysisLog
+    OntologyAnalysisLog,
+    OntologyNode,
+    OntologyEdge
 )
 from .serializers import (
     OntologyCategorySerializer,
@@ -428,3 +431,205 @@ class OntologyDashboardAPIView(APIView):
             },
             'execution_time_ms': execution_time
         })
+
+
+# ==========================================
+# Knowledge Graph API Views (AIBIS Enterprise AI Platform)
+# ==========================================
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def kg_stats(request):
+    """지식 그래프 통계 API"""
+    try:
+        from .services.knowledge_graph import KnowledgeGraphService
+
+        service = KnowledgeGraphService()
+        stats = service.get_graph_statistics()
+
+        return Response({
+            'status': 'success',
+            'data': stats
+        })
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'status': 'error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def kg_nodes(request):
+    """지식 그래프 노드 목록 API"""
+    try:
+        from .services.knowledge_graph import KnowledgeGraphService
+
+        service = KnowledgeGraphService()
+
+        # 필터 파라미터
+        node_type = request.query_params.get('node_type')
+        category = request.query_params.get('category')
+        limit = int(request.query_params.get('limit', 50))
+
+        # 노드 조회
+        if node_type:
+            nodes = service.get_nodes_by_type(node_type)[:limit]
+        elif category:
+            nodes = service.get_nodes_by_category(category)[:limit]
+        else:
+            nodes = OntologyNode.objects.filter(is_active=True)[:limit]
+
+        node_list = []
+        for node in nodes:
+            node_list.append({
+                'node_id': str(node.node_id),
+                'node_type': node.node_type,
+                'name': node.name,
+                'code': node.code or '',
+                'category': node.category or '',
+                'labels': node.labels or [],
+                'properties': node.properties or {},
+            })
+
+        return Response({
+            'status': 'success',
+            'count': len(node_list),
+            'data': node_list
+        })
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'status': 'error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def kg_query(request):
+    """지식 그래프 쿼리 API"""
+    try:
+        from .services.knowledge_graph import KnowledgeGraphService
+
+        query_type = request.data.get('query_type', 'neighbors')
+        parameters = request.data.get('parameters', {})
+
+        service = KnowledgeGraphService()
+        query_service = service.build_and_query()
+
+        result = {}
+
+        if query_type == 'neighbors':
+            node_id = parameters.get('node_id')
+            direction = parameters.get('direction', 'out')
+            depth = parameters.get('depth', 1)
+
+            if not node_id:
+                return Response({
+                    'error': 'node_id 파라미터가 필요합니다.',
+                    'status': 'error'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            neighbors = query_service.get_neighbors(node_id, direction, depth)
+            result = {
+                'node_id': node_id,
+                'neighbors': neighbors,
+                'count': len(neighbors)
+            }
+
+        elif query_type == 'shortest_path':
+            source = parameters.get('source')
+            target = parameters.get('target')
+
+            if not source or not target:
+                return Response({
+                    'error': 'source, target 파라미터가 필요합니다.',
+                    'status': 'error'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            path = query_service.find_shortest_path(source, target)
+            result = {
+                'source': source,
+                'target': target,
+                'path': path,
+                'length': len(path) - 1 if path else 0
+            }
+
+        elif query_type == 'centrality':
+            method = parameters.get('method', 'degree')
+            top_n = parameters.get('top_n', 10)
+
+            centrality = query_service.calculate_centrality(method, top_n)
+            result = {
+                'method': method,
+                'top_n': top_n,
+                'centrality': centrality
+            }
+
+        elif query_type == 'subgraph':
+            node_ids = parameters.get('node_ids', [])
+            include_neighbors = parameters.get('include_neighbors', False)
+
+            if not node_ids:
+                return Response({
+                    'error': 'node_ids 파라미터가 필요합니다.',
+                    'status': 'error'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            subgraph = query_service.get_subgraph(node_ids, include_neighbors)
+            result = {
+                'node_count': subgraph.number_of_nodes(),
+                'edge_count': subgraph.number_of_edges(),
+                'nodes': list(subgraph.nodes())
+            }
+
+        else:
+            return Response({
+                'error': f'지원하지 않는 쿼리 유형: {query_type}',
+                'status': 'error'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            'status': 'success',
+            'query_type': query_type,
+            'data': result
+        })
+
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'status': 'error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def kg_search(request):
+    """지식 그래프 노드 검색 API"""
+    try:
+        from .services.knowledge_graph import KnowledgeGraphService
+
+        term = request.query_params.get('term', '')
+        limit = int(request.query_params.get('limit', 10))
+
+        if not term:
+            return Response({
+                'error': 'term 파라미터가 필요합니다.',
+                'status': 'error'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        service = KnowledgeGraphService()
+        nodes = service.search_nodes(term, limit)
+
+        return Response({
+            'status': 'success',
+            'query': term,
+            'count': len(nodes),
+            'data': nodes
+        })
+
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'status': 'error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

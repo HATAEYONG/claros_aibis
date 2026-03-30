@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.utils import timezone
 
@@ -208,3 +209,127 @@ class OntologyAnalysisLog(models.Model):
 
     def __str__(self):
         return f"{self.analysis_type} ({self.start_category}→{self.end_category})"
+
+
+# ==========================================
+# Knowledge Graph Models (AIBIS Enterprise AI Platform)
+# ==========================================
+
+class OntologyNode(models.Model):
+    """온톨로지 노드 — 지식 그래프 노드"""
+
+    node_id = models.UUIDField(
+        "노드 ID", primary_key=True, default=uuid.uuid4
+    )
+
+    # 노드 분류
+    node_type = models.CharField(
+        "노드 유형", max_length=50,
+        choices=[
+            ("entity", "엔티티"),
+            ("concept", "개념"),
+            ("relationship", "관계"),
+            ("event", "이벤트"),
+            ("process", "프로세스"),
+        ]
+    )
+
+    # 노드 식별
+    name = models.CharField("이름", max_length=200)
+    code = models.CharField("코드", max_length=100, blank=True)
+
+    # 카테고리 분류
+    category = models.CharField("카테고리", max_length=50, blank=True)
+
+    # 레이블 (다중 분류)
+    labels = models.JSONField("레이블", default=list)
+
+    # 속성
+    properties = models.JSONField("속성", default=dict)
+
+    # 메타데이터
+    metadata = models.JSONField("메타데이터", default=dict)
+
+    # 상태
+    is_active = models.BooleanField("활성", default=True)
+
+    # 시각
+    created_at = models.DateTimeField("생성일시", auto_now_add=True)
+    updated_at = models.DateTimeField("수정일시", auto_now=True)
+
+    class Meta:
+        verbose_name = "온톨로지 노드"
+        verbose_name_plural = "온톨로지 노드"
+        indexes = [
+            models.Index(fields=["node_type", "category"]),
+            models.Index(fields=["name", "code"]),
+        ]
+
+    def __str__(self):
+        return f"[{self.node_type}] {self.name}"
+
+
+class OntologyEdge(models.Model):
+    """온톨로지 엣지 — 지식 그래프 엣지"""
+
+    edge_id = models.UUIDField(
+        "엣지 ID", primary_key=True, default=uuid.uuid4
+    )
+
+    # 연결 노드
+    source_node = models.ForeignKey(
+        OntologyNode,
+        on_delete=models.CASCADE,
+        related_name="outgoing_edges",
+        verbose_name="소스 노드"
+    )
+    target_node = models.ForeignKey(
+        OntologyNode,
+        on_delete=models.CASCADE,
+        related_name="incoming_edges",
+        verbose_name="타겟 노드"
+    )
+
+    # 관계 유형
+    relationship_type = models.CharField(
+        "관계 유형", max_length=50,
+        choices=[
+            ("causal", "인과"),
+            ("temporal", "시간적"),
+            ("spatial", "공간적"),
+            ("hierarchical", "계층적"),
+            ("association", "연관"),
+            ("dependency", "의존"),
+            ("transformation", "변환"),
+        ]
+    )
+
+    # 관계 속성
+    properties = models.JSONField("속성", default=dict)
+
+    # 가중치
+    weight = models.FloatField("가중치", default=1.0)
+
+    # 신뢰도
+    confidence = models.FloatField("신뢰도", default=1.0)
+
+    # 메타데이터
+    metadata = models.JSONField("메타데이터", default=dict)
+
+    # 상태
+    is_active = models.BooleanField("활성", default=True)
+
+    # 시각
+    created_at = models.DateTimeField("생성일시", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "온톨로지 엣지"
+        verbose_name_plural = "온톨로지 엣지"
+        unique_together = ["source_node", "target_node", "relationship_type"]
+        indexes = [
+            models.Index(fields=["source_node", "relationship_type"]),
+            models.Index(fields=["target_node", "relationship_type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.source_node.name} → {self.target_node.name} ({self.relationship_type})"

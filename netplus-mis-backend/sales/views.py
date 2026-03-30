@@ -2,6 +2,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from utils.batch_operations import BatchOperationsMixin
 from .models import (
     MonthlySales, ProductSales, CustomerTier,
     SalesPipeline, SalesTeamPerformance, TopCustomer
@@ -79,7 +80,7 @@ def get_dummy_top_customers():
     ]
 
 
-class MonthlySalesViewSet(viewsets.ModelViewSet):
+class MonthlySalesViewSet(BatchOperationsMixin, viewsets.ModelViewSet):
     """월별 매출 ViewSet"""
     queryset = MonthlySales.objects.all()
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
@@ -155,7 +156,7 @@ class MonthlySalesViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ProductSalesViewSet(viewsets.ModelViewSet):
+class ProductSalesViewSet(BatchOperationsMixin, viewsets.ModelViewSet):
     """제품별 매출 ViewSet"""
     queryset = ProductSales.objects.all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -201,7 +202,7 @@ class ProductSalesViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class CustomerTierViewSet(viewsets.ModelViewSet):
+class CustomerTierViewSet(BatchOperationsMixin, viewsets.ModelViewSet):
     """고객 등급별 매출 ViewSet"""
     queryset = CustomerTier.objects.all()
     serializer_class = CustomerTierSerializer
@@ -239,7 +240,7 @@ class CustomerTierViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class SalesPipelineViewSet(viewsets.ModelViewSet):
+class SalesPipelineViewSet(BatchOperationsMixin, viewsets.ModelViewSet):
     """영업 파이프라인 ViewSet"""
     queryset = SalesPipeline.objects.all()
     serializer_class = SalesPipelineSerializer
@@ -283,7 +284,7 @@ class SalesPipelineViewSet(viewsets.ModelViewSet):
         return Response(pipeline_data)
 
 
-class SalesTeamPerformanceViewSet(viewsets.ModelViewSet):
+class SalesTeamPerformanceViewSet(BatchOperationsMixin, viewsets.ModelViewSet):
     """영업팀 성과 ViewSet"""
     queryset = SalesTeamPerformance.objects.all()
     serializer_class = SalesTeamPerformanceSerializer
@@ -322,7 +323,7 @@ class SalesTeamPerformanceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class TopCustomerViewSet(viewsets.ModelViewSet):
+class TopCustomerViewSet(BatchOperationsMixin, viewsets.ModelViewSet):
     """주요 거래처 ViewSet"""
     queryset = TopCustomer.objects.all()
     serializer_class = TopCustomerSerializer
@@ -360,3 +361,70 @@ class TopCustomerViewSet(viewsets.ModelViewSet):
         top_accounts = queryset.order_by('-revenue')[:limit]
         serializer = TopCustomerSerializer(top_accounts, many=True)
         return Response(serializer.data)
+
+
+class SalesKPIViewSet(viewsets.ViewSet):
+    """Sales KPI ViewSet"""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        from .kpi_engine import SalesKPIEngine
+        self.engine = SalesKPIEngine()
+
+    @action(detail=False, methods=['get'])
+    def all_kpis(self, request):
+        """모든 영업 KPI 조회"""
+        from datetime import datetime
+
+        target_date_str = request.query_params.get('date')
+        target_date = None
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        kpis = self.engine.calculate_all_kpis(target_date)
+
+        return Response({
+            'target_date': target_date_str or 'today',
+            'total_kpis': len(kpis),
+            'kpis': list(kpis.values())
+        })
+
+    @action(detail=False, methods=['get'])
+    def kpi(self, request):
+        """특정 KPI 조회"""
+        kpi_code = request.query_params.get('code')
+
+        if not kpi_code:
+            return Response(
+                {'error': 'KPI 코드(code) 파라미터가 필요합니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        from datetime import datetime
+
+        target_date_str = request.query_params.get('date')
+        target_date = None
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        kpis = self.engine.calculate_all_kpis(target_date)
+
+        if kpi_code not in kpis:
+            return Response(
+                {'error': f'알 수 없는 KPI 코드: {kpi_code}'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(kpis[kpi_code])

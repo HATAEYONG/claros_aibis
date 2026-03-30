@@ -324,3 +324,70 @@ class InvestmentROIViewSet(viewsets.ModelViewSet):
             summary['by_status'][status_code] = queryset.filter(status=status_code).count()
 
         return Response(summary)
+
+
+class AccountingKPIViewSet(viewsets.ViewSet):
+    """Managerial Accounting KPI ViewSet"""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        from .kpi_engine import AccountingKPIEngine
+        self.engine = AccountingKPIEngine()
+
+    @action(detail=False, methods=['get'])
+    def all_kpis(self, request):
+        """모든 관리회계 KPI 조회"""
+        from datetime import datetime
+
+        target_date_str = request.query_params.get('date')
+        target_date = None
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        kpis = self.engine.calculate_all_kpis(target_date)
+
+        return Response({
+            'target_date': target_date_str or 'today',
+            'total_kpis': len(kpis),
+            'kpis': list(kpis.values())
+        })
+
+    @action(detail=False, methods=['get'])
+    def kpi(self, request):
+        """특정 KPI 조회"""
+        kpi_code = request.query_params.get('code')
+
+        if not kpi_code:
+            return Response(
+                {'error': 'KPI 코드(code) 파라미터가 필요합니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        from datetime import datetime
+
+        target_date_str = request.query_params.get('date')
+        target_date = None
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        kpis = self.engine.calculate_all_kpis(target_date)
+
+        if kpi_code not in kpis:
+            return Response(
+                {'error': f'알 수 없는 KPI 코드: {kpi_code}'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(kpis[kpi_code])

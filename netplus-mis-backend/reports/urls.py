@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ExecutiveSummaryViewSet, DepartmentComparisonViewSet,
     KeyMetricSummaryViewSet, RiskOpportunityViewSet,
-    RecommendationViewSet, MonthlyReportViewSet
+    RecommendationViewSet, MonthlyReportViewSet,
+    ReportsKPIViewSet
 )
 
 router = DefaultRouter()
@@ -13,6 +14,7 @@ router.register(r'key-metric', KeyMetricSummaryViewSet)
 router.register(r'risk-opportunity', RiskOpportunityViewSet)
 router.register(r'recommendation', RecommendationViewSet)
 router.register(r'monthly-report', MonthlyReportViewSet)
+router.register(r'kpi', ReportsKPIViewSet, basename='reports-kpi')
 
 urlpatterns = [
     path('', include(router.urls)),

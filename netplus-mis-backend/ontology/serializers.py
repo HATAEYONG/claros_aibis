@@ -5,7 +5,9 @@ from .models import (
     ERPTableMapping,
     OntologyRelation,
     DataFlowMetrics,
-    OntologyAnalysisLog
+    OntologyAnalysisLog,
+    OntologyNode,
+    OntologyEdge,
 )
 
 
@@ -170,3 +172,71 @@ class CostToESGSerializer(serializers.Serializer):
     social = serializers.DictField()
     governance = serializers.DictField()
     esg_score = serializers.DecimalField(max_digits=5, decimal_places=2)
+
+
+# ==========================================
+# Knowledge Graph Serializers
+# ==========================================
+
+class OntologyNodeSerializer(serializers.ModelSerializer):
+    """온톨로지 노드 시리얼라이저"""
+
+    node_type_display = serializers.CharField(source='get_node_type_display', read_only=True)
+    outgoing_edges_count = serializers.SerializerMethodField()
+    incoming_edges_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OntologyNode
+        fields = [
+            'node_id', 'node_type', 'node_type_display', 'name', 'code',
+            'category', 'labels', 'properties', 'metadata', 'is_active',
+            'outgoing_edges_count', 'incoming_edges_count',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['node_id', 'created_at', 'updated_at']
+
+    def get_outgoing_edges_count(self, obj):
+        return obj.outgoing_edges.filter(is_active=True).count()
+
+    def get_incoming_edges_count(self, obj):
+        return obj.incoming_edges.filter(is_active=True).count()
+
+
+class OntologyEdgeSerializer(serializers.ModelSerializer):
+    """온톨로지 엣지 시리얼라이저"""
+
+    relationship_type_display = serializers.CharField(source='get_relationship_type_display', read_only=True)
+    source_node_name = serializers.CharField(source='source_node.name', read_only=True)
+    target_node_name = serializers.CharField(source='target_node.name', read_only=True)
+
+    class Meta:
+        model = OntologyEdge
+        fields = [
+            'edge_id', 'source_node', 'target_node', 'source_node_name', 'target_node_name',
+            'relationship_type', 'relationship_type_display', 'properties',
+            'weight', 'confidence', 'metadata', 'is_active', 'created_at',
+        ]
+        read_only_fields = ['edge_id', 'created_at']
+
+
+class GraphPathSerializer(serializers.Serializer):
+    """그래프 경로 시리얼라이저"""
+    nodes = serializers.ListField(child=serializers.CharField())
+    edges = serializers.ListField()
+    length = serializers.IntegerField()
+
+
+class GraphSubgraphSerializer(serializers.Serializer):
+    """하위 그래프 시리얼라이저"""
+    nodes = serializers.ListField()
+    edges = serializers.ListField()
+    statistics = serializers.DictField()
+
+
+class GraphCentralitySerializer(serializers.Serializer):
+    """중심성 분석 시리얼라이저"""
+    node_id = serializers.CharField()
+    degree_centrality = serializers.FloatField()
+    betweenness_centrality = serializers.FloatField()
+    closeness_centrality = serializers.FloatField()
+    pagerank = serializers.FloatField()

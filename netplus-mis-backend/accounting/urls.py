@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     BudgetActualViewSet, DepartmentProfitabilityViewSet,
     KPIPerformanceViewSet, FinancialRatioAnalysisViewSet,
-    BudgetAllocationViewSet, InvestmentROIViewSet
+    BudgetAllocationViewSet, InvestmentROIViewSet,
+    AccountingKPIViewSet
 )
 
 router = DefaultRouter()
@@ -13,6 +14,7 @@ router.register(r'kpi-performance', KPIPerformanceViewSet)
 router.register(r'financial-ratio', FinancialRatioAnalysisViewSet)
 router.register(r'budget-allocation', BudgetAllocationViewSet)
 router.register(r'investment-roi', InvestmentROIViewSet)
+router.register(r'kpi', AccountingKPIViewSet, basename='accounting-kpi')
 
 urlpatterns = [
     path('', include(router.urls)),
