@@ -119,6 +119,11 @@ networkx>=3.4                   # Knowledge graph / ontology graph structures
 jinja2>=3.1.0                   # Report/template rendering
 holidays>=0.60                  # Business calendar for forecasting
 pydantic>=2.9.0                 # Data validation, used directly across services
+psutil>=6.0.0                   # System metrics, used by utils/health_check.py
+sqlparse>=0.5.0                 # SQL formatting, used by Django internals/AI SQL guard
+uritemplate>=4.1.0              # Required by drf-spectacular schema generation
+django-timezone-field>=7.0       # Required by django-celery-beat's PeriodicTask model
+inflection>=0.5.0               # Required by drf-spectacular schema naming
 
 # ============================================================================
 # Phase 1 Upgrade: Vector Database
