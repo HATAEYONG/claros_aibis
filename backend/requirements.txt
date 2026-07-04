@@ -114,6 +114,11 @@ langchain-anthropic>=0.3.0      # LangChain Anthropic integration
 langchain-core>=0.3.0           # LangChain core
 langgraph>=1.1.0                # Multi-agent graph orchestration (SAP 업그레이드: Intent/Schema/SQL/Safety/Interpreter 파이프라인)
 tiktoken>=0.8.0                 # OpenAI tokenization (for embedding models)
+aiohttp>=3.10.0                 # Async HTTP client used by ai/messaging_agent_service.py
+networkx>=3.4                   # Knowledge graph / ontology graph structures
+jinja2>=3.1.0                   # Report/template rendering
+holidays>=0.60                  # Business calendar for forecasting
+pydantic>=2.9.0                 # Data validation, used directly across services
 
 # ============================================================================
 # Phase 1 Upgrade: Vector Database
