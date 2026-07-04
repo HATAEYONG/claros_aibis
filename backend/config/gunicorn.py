@@ -9,7 +9,9 @@ bind = "0.0.0.0:8000"
 backlog = 2048
 
 # Worker processes
-workers = multiprocessing.cpu_count() * 2 + 1
+# Override with GUNICORN_WORKERS for memory-constrained hosts; each worker
+# loads the full app (AI agent framework, models) independently in memory.
+workers = int(os.getenv("GUNICORN_WORKERS", multiprocessing.cpu_count() * 2 + 1))
 worker_class = "sync"
 worker_connections = 1000
 max_requests = 1000
