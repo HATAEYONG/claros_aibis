@@ -23,6 +23,7 @@ cryptography==44.0.0             # Latest (Feb 2025)
 # API Documentation
 # ============================================================================
 drf-yasg==1.21.8                # Swagger/OpenAPI - Latest (Jan 2025)
+drf-spectacular==0.29.0         # OpenAPI schema generation for DEFAULT_SCHEMA_CLASS
 
 # ============================================================================
 # Data Processing
