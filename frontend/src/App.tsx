@@ -415,7 +415,7 @@ const findMenuItem = (items: any[], id: string): any => {
 
 const App: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -431,6 +431,17 @@ const App: React.FC = () => {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatMessages]);
+
+  // 화면 폭이 데스크톱(lg, 1024px) 경계를 넘나들 때만 사이드바를 자동으로 여닫음
+  // (같은 구간 안에서 수동으로 토글한 상태는 유지)
+  useEffect(() => {
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      setSidebarOpen(e.matches);
+    };
+    desktopQuery.addEventListener('change', handleChange);
+    return () => desktopQuery.removeEventListener('change', handleChange);
+  }, []);
 
   const menuItems = [
     // 업그레이드 현황 (최상위)
