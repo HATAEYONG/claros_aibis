@@ -184,7 +184,7 @@ SQL 쿼리만 JSON 형식으로 반환하세요."""
 
     def _get_system_prompt(self) -> str:
         """시스템 프롬프트"""
-        return """당신은 넷플러스 MIS 시스템의 AI 어시스턴트입니다.
+        return """당신은 Claros MIS 시스템의 AI 어시스턴트입니다.
 
 제조업 데이터 분석, 경영 지표 해석, 프로세스 최적화 등 다양한 질문에 답변할 수 있습니다.
 

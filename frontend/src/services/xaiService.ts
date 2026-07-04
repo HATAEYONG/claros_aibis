@@ -317,16 +317,3 @@ class XAIService {
 const xaiService = new XAIService();
 
 export default xaiService;
-export type {
-  SHAPExplanation,
-  BatchExplanation,
-  GlobalImportance,
-  FeatureImportanceItem,
-  PermutationImportance,
-  AttentionVisualization,
-  TemporalImportance,
-  XAIReportRequest,
-  PredictionExplanation,
-  XAIReportResult,
-  PredictionComparison,
-};

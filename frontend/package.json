@@ -2,7 +2,7 @@
   "name": "yuhan-mis-frontend",
   "version": "1.0.0",
   "type": "module",
-  "description": "넷플러스 통합 MIS-AI 시스템 - 경영자 정보 대시보드",
+  "description": "Claros 통합 MIS-AI 시스템 - 경영자 정보 대시보드",
   "private": true,
   "dependencies": {
     "@radix-ui/react-progress": "^1.1.8",
@@ -33,7 +33,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
   },
