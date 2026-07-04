@@ -1,8 +1,8 @@
-# NetPlus MIS-AI Dashboard - 시스템 아키텍처
+# Claros MIS-AI Dashboard - 시스템 아키텍처
 
 **문서 버전**: 1.0.0
 **작성일**: 2026-03-05
-**프로젝트**: NetPlus MIS-AI Dashboard (유한산업)
+**프로젝트**: Claros MIS-AI Dashboard (유한산업)
 
 ---
 
@@ -107,7 +107,7 @@
 ### 2.1 모듈 구성도
 
 ```
-NetPlus MIS-AI Dashboard
+Claros MIS-AI Dashboard
 ├── Frontend Modules
 │   ├── Dashboard          # 통합 대시보드
 │   ├── Financial Management # 재무 관리
@@ -329,7 +329,7 @@ src/
 ### 4.2 프로젝트 구조
 
 ```
-netplus-mis-backend/
+claros-mis-backend/
 ├── config/                        # Django 설정
 │   ├── __init__.py
 │   ├── settings.py                # 전체 설정
@@ -638,11 +638,11 @@ ESG (Sustainability)
 # docker-compose.yml
 services:
   frontend:
-    build: ./netplus-mis-frontend
+    build: ./claros-mis-frontend
     ports: ["3000:3000"]
 
   backend:
-    build: ./netplus-mis-backend
+    build: ./claros-mis-backend
     ports: ["8000:8000"]
     environment:
       - DB_HOST=postgres
@@ -651,7 +651,7 @@ services:
   postgres:
     image: postgres:14
     environment:
-      - POSTGRES_DB=netplus_mis
+      - POSTGRES_DB=claros_mis
 
   redis:
     image: redis:7-alpine
@@ -778,4 +778,4 @@ interface OutsourcingData {
 
 **문서 버전**: 1.0.0
 **작성일**: 2026-03-05
-**프로젝트**: NetPlus MIS-AI Dashboard (유한산업)
+**프로젝트**: Claros MIS-AI Dashboard (유한산업)

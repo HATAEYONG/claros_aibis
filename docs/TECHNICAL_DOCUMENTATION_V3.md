@@ -1,4 +1,4 @@
-# NetPlus MIS-AI Dashboard 기술문서 v3.0
+# Claros MIS-AI Dashboard 기술문서 v3.0
 
 ## 문서 버전 정보
 
@@ -16,7 +16,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| **프로젝트명** | NetPlus MIS-AI Dashboard |
+| **프로젝트명** | Claros MIS-AI Dashboard |
 | **대상 기업** | 유한산업 (YH ERP) |
 | **목적** | 이기종 ERP 연계 매핑 관리 시스템을 통한 경영정보 시각화 및 AI 기반 분석 제공 |
 | **아키텍처** | Django 5.0 Backend + React 18/TypeScript Frontend |
@@ -406,7 +406,7 @@ npm run build
 
 ```bash
 # Backend .env
-DATABASE_URL=postgresql://user:password@localhost:5432/netplus_mis
+DATABASE_URL=postgresql://user:password@localhost:5432/claros_mis
 SECRET_KEY=your-secret-key
 DEBUG=True
 
@@ -457,7 +457,7 @@ LOGGING = {
 
 ```bash
 # PostgreSQL 매일 백업
-0 2 * * * pg_dump -U postgres netplus_mis > backup_$(date +\%Y\%m\%d).sql
+0 2 * * * pg_dump -U postgres claros_mis > backup_$(date +\%Y\%m\%d).sql
 
 # ERP 매핑 설정 백업
 python manage.py dumpdata erp_sync > erp_mapping_backup_$(date +\%Y\%m\%d).json
@@ -467,9 +467,9 @@ python manage.py dumpdata erp_sync > erp_mapping_backup_$(date +\%Y\%m\%d).json
 
 ## 8. 문의 및 지원
 
-- **기술 문의**: dev@netplus.co.kr
-- **운영 문의**: ops@netplus.co.kr
-- **프로젝트 저장소**: https://github.com/netplus/mis-ai-dashboard
+- **기술 문의**: dev@claros.co.kr
+- **운영 문의**: ops@claros.co.kr
+- **프로젝트 저장소**: https://github.com/claros/mis-ai-dashboard
 
 ---
 

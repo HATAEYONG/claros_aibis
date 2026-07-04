@@ -280,7 +280,7 @@ ERP 소스 목록 조회
       "source_type": "postgresql",
       "host": "133.186.214.219",
       "port": 27455,
-      "database_name": "emax",
+      "database_name": "sap",
       "is_default": true,
       "is_active": true,
       "table_count": 1184

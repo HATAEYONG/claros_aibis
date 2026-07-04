@@ -13,13 +13,13 @@ fi
 echo "코드 업데이트 및 재배포..."
 
 # 파일 업로드
-scp -i "$KEY_PATH" -o StrictHostKeyChecking=no docker-compose.yml $SERVER_USER@$SERVER_IP:~/netplus-mis/
-scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r netplus-mis-backend $SERVER_USER@$SERVER_IP:~/netplus-mis/
-scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r netplus-mis-frontend $SERVER_USER@$SERVER_IP:~/netplus-mis/
+scp -i "$KEY_PATH" -o StrictHostKeyChecking=no docker-compose.yml $SERVER_USER@$SERVER_IP:~/claros-mis/
+scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r claros-mis-backend $SERVER_USER@$SERVER_IP:~/claros-mis/
+scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r claros-mis-frontend $SERVER_USER@$SERVER_IP:~/claros-mis/
 
 # 재빌드 및 재시작
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
-cd ~/netplus-mis
+cd ~/claros-mis
 docker compose build
 docker compose up -d
 ENDSSH

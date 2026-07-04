@@ -11,7 +11,7 @@
    - **Platform**: Linux/Unix
    - **Blueprint**: Ubuntu 22.04 LTS
    - **Plan**: $5/month (1GB RAM, 1 vCPU, 40GB SSD)
-4. 인스턴스 이름: `netplus-mis-dashboard`
+4. 인스턴스 이름: `claros-mis-dashboard`
 5. **Create instance** 클릭
 
 ### 1.2 로컬에서 준비할 파일
@@ -19,9 +19,9 @@
 배포에 필요한 파일들을 S3나 SCP로 업로드:
 
 ```
-netplus-mis-ai-dashboard/
-├── netplus-mis-backend/     # Django 백엔드 전체
-├── netplus-mis-frontend/    # React 프론트엔드 전체
+claros-mis-ai-dashboard/
+├── claros-mis-backend/     # Django 백엔드 전체
+├── claros-mis-frontend/    # React 프론트엔드 전체
 └── deploy/                  # 배포 설정 파일
     ├── deploy.sh            # 전체 배포 스크립트
     ├── deploy-backend.sh    # 백엔드만 재배포
@@ -38,8 +38,8 @@ netplus-mis-ai-dashboard/
 
 ```bash
 # 로컬 Windows PowerShell에서
-scp -r -i "your-key.pem" netplus-mis-backend ubuntu@your-lightsail-ip:/home/ubuntu/
-scp -r -i "your-key.pem" netplus-mis-frontend ubuntu@your-lightsail-ip:/home/ubuntu/
+scp -r -i "your-key.pem" claros-mis-backend ubuntu@your-lightsail-ip:/home/ubuntu/
+scp -r -i "your-key.pem" claros-mis-frontend ubuntu@your-lightsail-ip:/home/ubuntu/
 scp -r -i "your-key.pem" deploy ubuntu@your-lightsail-ip:/home/ubuntu/
 ```
 
@@ -75,9 +75,9 @@ sudo -u postgres psql
 ```
 
 ```sql
-CREATE USER netplus_user WITH PASSWORD 'your_password';
-CREATE DATABASE netplus_mis OWNER netplus_user;
-GRANT ALL PRIVILEGES ON DATABASE netplus_mis TO netplus_user;
+CREATE USER claros_user WITH PASSWORD 'your_password';
+CREATE DATABASE claros_mis OWNER claros_user;
+GRANT ALL PRIVILEGES ON DATABASE claros_mis TO claros_user;
 \q
 ```
 
@@ -85,21 +85,21 @@ GRANT ALL PRIVILEGES ON DATABASE netplus_mis TO netplus_user;
 
 ```bash
 # 디렉토리 생성
-sudo mkdir -p /var/www/netplus-mis/backend
-sudo mkdir -p /var/www/netplus-mis/venv
+sudo mkdir -p /var/www/claros-mis/backend
+sudo mkdir -p /var/www/claros-mis/venv
 
 # 파일 복사
-sudo cp -r /home/ubuntu/netplus-mis-backend/* /var/www/netplus-mis/backend/
+sudo cp -r /home/ubuntu/claros-mis-backend/* /var/www/claros-mis/backend/
 
 # 가상환경 생성
-python3 -m venv /var/www/netplus-mis/venv
-source /var/www/netplus-mis/venv/bin/activate
+python3 -m venv /var/www/claros-mis/venv
+source /var/www/claros-mis/venv/bin/activate
 
 # 패키지 설치
-pip install -r /var/www/netplus-mis/backend/requirements.txt
+pip install -r /var/www/claros-mis/backend/requirements.txt
 
 # 환경변수 설정
-cd /var/www/netplus-mis/backend
+cd /var/www/claros-mis/backend
 cp .env.production .env
 nano .env  # 비밀키 등 수정
 
@@ -108,41 +108,41 @@ python manage.py collectstatic --noinput
 python manage.py migrate
 
 # 권한 설정
-sudo chown -R www-data:www-data /var/www/netplus-mis
+sudo chown -R www-data:www-data /var/www/claros-mis
 ```
 
 ### 3.4 Frontend 배포
 
 ```bash
-sudo mkdir -p /var/www/netplus-mis/frontend
-sudo cp -r /home/ubuntu/netplus-mis-frontend/* /var/www/netplus-mis/frontend/
-cd /var/www/netplus-mis/frontend
+sudo mkdir -p /var/www/claros-mis/frontend
+sudo cp -r /home/ubuntu/claros-mis-frontend/* /var/www/claros-mis/frontend/
+cd /var/www/claros-mis/frontend
 npm install
 npm run build
-sudo chown -R www-data:www-data /var/www/netplus-mis/frontend
+sudo chown -R www-data:www-data /var/www/claros-mis/frontend
 ```
 
 ### 3.5 Gunicorn 서비스 설정
 
 ```bash
 # 서비스 파일 복사
-sudo cp /home/ubuntu/deploy/gunicorn.service /etc/systemd/system/netplus-mis.service
+sudo cp /home/ubuntu/deploy/gunicorn.service /etc/systemd/system/claros-mis.service
 
 # 서비스 시작
 sudo systemctl daemon-reload
-sudo systemctl enable netplus-mis
-sudo systemctl start netplus-mis
-sudo systemctl status netplus-mis
+sudo systemctl enable claros-mis
+sudo systemctl start claros-mis
+sudo systemctl status claros-mis
 ```
 
 ### 3.6 Nginx 설정
 
 ```bash
 # 설정 파일 복사
-sudo cp /home/ubuntu/deploy/nginx.conf /etc/nginx/sites-available/netplus-mis
+sudo cp /home/ubuntu/deploy/nginx.conf /etc/nginx/sites-available/claros-mis
 
 # 심볼릭 링크 생성
-sudo ln -s /etc/nginx/sites-available/netplus-mis /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/claros-mis /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 
 # 설정 테스트 및 재시작
@@ -166,7 +166,7 @@ sudo ufw enable
 ### Backend (.env)
 
 ```bash
-sudo nano /var/www/netplus-mis/backend/.env
+sudo nano /var/www/claros-mis/backend/.env
 ```
 
 ```env
@@ -176,8 +176,8 @@ ALLOWED_HOSTS=your-ip-address,.amazonaws.com
 
 # Database
 DB_ENGINE=django.db.backends.postgresql
-DB_NAME=netplus_mis
-DB_USER=netplus_user
+DB_NAME=claros_mis
+DB_USER=claros_user
 DB_PASSWORD=your-db-password
 DB_HOST=localhost
 DB_PORT=5432
@@ -190,7 +190,7 @@ CORS_ALLOWED_ORIGINS=http://your-ip-address,https://your-domain.com
 ### Frontend (.env.production)
 
 ```bash
-sudo nano /var/www/netplus-mis/frontend/.env.production
+sudo nano /var/www/claros-mis/frontend/.env.production
 ```
 
 ```env
@@ -229,18 +229,18 @@ sudo ./deploy-frontend.sh
 
 ```bash
 # Gunicorn 상태
-sudo systemctl status netplus-mis
-sudo systemctl restart netplus-mis
-sudo systemctl stop netplus-mis
-sudo systemctl start netplus-mis
+sudo systemctl status claros-mis
+sudo systemctl restart claros-mis
+sudo systemctl stop claros-mis
+sudo systemctl start claros-mis
 
 # Nginx 상태
 sudo systemctl status nginx
 sudo systemctl restart nginx
 
 # 로그 확인
-sudo journalctl -u netplus-mis -f
-sudo tail -f /var/log/nginx/netplus-mis-error.log
+sudo journalctl -u claros-mis -f
+sudo tail -f /var/log/nginx/claros-mis-error.log
 ```
 
 ---
@@ -283,14 +283,14 @@ sudo certbot --nginx -d your-domain.com
 ### Gunicorn이 시작하지 않음
 
 ```bash
-sudo journalctl -u netplus-mis -n 50
+sudo journalctl -u claros-mis -n 50
 ```
 
 ### Nginx 502 Bad Gateway
 
 ```bash
 # Gunicorn이 실행 중인지 확인
-sudo systemctl status netplus-mis
+sudo systemctl status claros-mis
 
 # 포트 확인
 sudo netstat -tlnp | grep 8000
@@ -299,8 +299,8 @@ sudo netstat -tlnp | grep 8000
 ### 정적 파일 로드 실패
 
 ```bash
-cd /var/www/netplus-mis/backend
-source /var/www/netplus-mis/venv/bin/activate
+cd /var/www/claros-mis/backend
+source /var/www/claros-mis/venv/bin/activate
 python manage.py collectstatic --noinput
 sudo chown -R www-data:www-data staticfiles/
 ```
@@ -312,7 +312,7 @@ sudo chown -R www-data:www-data staticfiles/
 sudo systemctl status postgresql
 
 # 연결 테스트
-psql -U netplus_user -d netplus_mis -h localhost
+psql -U claros_user -d claros_mis -h localhost
 ```
 
 ---
@@ -325,5 +325,5 @@ psql -U netplus_user -d netplus_mis -h localhost
 
 ---
 
-**문서 작성**: NetPlus MIS-AI Dashboard 개발팀
+**문서 작성**: Claros MIS-AI Dashboard 개발팀
 **최종 수정일**: 2024-12-26

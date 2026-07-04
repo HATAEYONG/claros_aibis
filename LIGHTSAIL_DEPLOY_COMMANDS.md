@@ -7,18 +7,18 @@
 curl -fsSL https://get.docker.com | sudo sh
 
 # 프로젝트 디렉토리 생성
-mkdir -p ~/netplus-mis/netplus-mis-backend
-mkdir -p ~/netplus-mis/netplus-mis-frontend
-mkdir -p ~/netplus-mis/config
+mkdir -p ~/claros-mis/claros-mis-backend
+mkdir -p ~/claros-mis/claros-mis-frontend
+mkdir -p ~/claros-mis/config
 
 # Docker Compose 파일 생성
-cat > ~/netplus-mis/docker-compose.yml << 'DOCKERCOMPOSE'
+cat > ~/claros-mis/docker-compose.yml << 'DOCKERCOMPOSE'
 version: '3.8'
 
 services:
   backend:
-    build: ./netplus-mis-backend
-    container_name: netplus-backend
+    build: ./claros-mis-backend
+    container_name: claros-backend
     restart: always
     environment:
       DEBUG: False
@@ -34,8 +34,8 @@ services:
       - "8000:8000"
 
   frontend:
-    build: ./netplus-mis-frontend
-    container_name: netplus-frontend
+    build: ./claros-mis-frontend
+    container_name: claros-frontend
     restart: always
     depends_on:
       - backend
@@ -51,7 +51,7 @@ DOCKERCOMPOSE
 ## 2. Backend Dockerfile
 
 ```bash
-cat > ~/netplus-mis/netplus-mis-backend/Dockerfile << 'DOCKERFILE'
+cat > ~/claros-mis/claros-mis-backend/Dockerfile << 'DOCKERFILE'
 FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -71,7 +71,7 @@ DOCKERFILE
 ## 3. Frontend Dockerfile
 
 ```bash
-cat > ~/netplus-mis/netplus-mis-frontend/Dockerfile << 'DOCKERFILE'
+cat > ~/claros-mis/claros-mis-frontend/Dockerfile << 'DOCKERFILE'
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -129,7 +129,7 @@ DOCKERFILE
 ## 4. 빌드 및 실행
 
 ```bash
-cd ~/netplus-mis
+cd ~/claros-mis
 docker compose build
 docker compose up -d
 ```

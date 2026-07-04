@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# NetPlus MIS-AI Dashboard Docker 배포 스크립트
+# Claros MIS-AI Dashboard Docker 배포 스크립트
 # AWS Lightsail Ubuntu + Docker Compose
 # ============================================================
 
@@ -28,8 +28,8 @@ fi
 # 2. 프로젝트 디렉토리 설정
 echo ""
 echo "[2/5] 프로젝트 디렉토리 설정..."
-mkdir -p /home/ubuntu/netplus-mis
-cd /home/ubuntu/netplus-mis
+mkdir -p /home/ubuntu/claros-mis
+cd /home/ubuntu/claros-mis
 
 # 3. GitHub에서 코드 가져오기 (또는 로컬에서 업로드)
 echo ""

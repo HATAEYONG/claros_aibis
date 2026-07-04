@@ -1,8 +1,8 @@
-# Netplus MIS-AI Dashboard
+# AI & BI DeepSeeHub Platform
 
 > 제조업 통합 경영정보시스템 (MIS) with AI 어시스턴트
 
-**Netplus**의 제조 현업 관리를 위한 통합 MIS-AI 대시보드 시스템입니다. 생산, 품질, 재무, 영업, 구매 등 전체 비즈니스 프로세스를 한 곳에서 관리하고, AI 어시스턴트를 통해 데이터 분석 및 의사결정 지원을 받을 수 있습니다.
+**AI & BI DeepSeeHub**의 제조 현업 관리를 위한 통합 MIS-AI 대시보드 시스템입니다. 생산, 품질, 재무, 영업, 구매 등 전체 비즈니스 프로세스를 한 곳에서 관리하고, AI 어시스턴트를 통해 데이터 분석 및 의사결정 지원을 받을 수 있습니다.
 
 ---
 
@@ -22,8 +22,8 @@
 
 | 항목 | 내용 |
 |------|------|
-| **프로젝트명** | Netplus MIS-AI Dashboard |
-| **개발사** | Netplus |
+| **프로젝트명** | AI & BI DeepSeeHub Platform |
+| **개발사** | DeepSeeHub |
 | **목적** | 제조업 통합 경영정보시스템 |
 | **버전** | 1.0.0 |
 | **개발 환경** | Windows 10, Python 3.11, Node.js 18+ |
@@ -76,7 +76,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Netplus MIS-AI Dashboard                                  │
+│  Claros MIS-AI Dashboard                                  │
 ├─────────────────────────────────────────────────────────────┤
 │  📊 통합 대시보드                                           │
 │  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐                   │
@@ -220,8 +220,8 @@ AI Services
 ### 4.2 프로젝트 구조
 
 ```
-netplus-mis-ai-dashboard/
-├── netplus-mis-frontend/         # React Frontend
+claros-mis-ai-dashboard/
+├── claros-mis-frontend/         # React Frontend
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── common/           # 공통 컴포넌트
@@ -254,7 +254,7 @@ netplus-mis-ai-dashboard/
 │   ├── package.json
 │   └── README.md
 │
-├── netplus-mis-backend/          # Django Backend
+├── claros-mis-backend/          # Django Backend
 │   ├── accounting/               # 관리회계 모듈
 │   ├── ai/                       # AI 서비스
 │   ├── config/                   # Django 설정
@@ -298,19 +298,19 @@ netplus-mis-ai-dashboard/
 
 ```bash
 # 1. 프로젝트 디렉토리로 이동
-cd C:\work\claude_code\netplus-mis-ai-dashboard
+cd C:\work\claude_code\claros-mis-ai-dashboard
 
 # 2. Backend 가상환경 생성 및 활성화
-cd netplus-mis-backend
-conda create -n netplus-mis python=3.11
-conda activate netplus-mis
+cd claros-mis-backend
+conda create -n claros-mis python=3.11
+conda activate claros-mis
 pip install -r requirements.txt
 
 # 3. Backend 실행
 python manage.py runserver
 
 # 4. 새로운 터미널에서 Frontend 설치 및 실행
-cd netplus-mis-frontend
+cd claros-mis-frontend
 npm install
 npm run dev
 ```
@@ -387,11 +387,11 @@ VITE_LLM_PROVIDER=ollama
 
 ```bash
 # Backend (Django)
-cd netplus-mis-backend
+cd claros-mis-backend
 python manage.py runserver  # Port 8000
 
 # Frontend (Vite)
-cd netplus-mis-frontend
+cd claros-mis-frontend
 npm run dev                 # Port 3000
 ```
 
@@ -399,7 +399,7 @@ npm run dev                 # Port 3000
 
 #### Frontend 빌드
 ```bash
-cd netplus-mis-frontend
+cd claros-mis-frontend
 npm run build
 # dist/ 폴더에 정적 파일 생성
 ```
@@ -506,14 +506,150 @@ python manage.py runserver 8001
 
 ---
 
-## 9. 라이선스
+## 9. 비즈니스 프로세스 관리 (신규)
 
-Copyright (c) 2024 Netplus. All rights reserved.
+### 9.1 O2C (Order to Cash) 프로세스
+
+**프로세스 흐름**
+```
+주문 접수 → 생산 → 배송 → 청구 → 입금
+```
+
+**주요 기능**
+- 실시간 스테이지 현황 모니터링
+- 이슈 추적 및 관리
+- KPI 달성률 분석
+- AI 기반 예측 및 최적화 제안
+
+**API 엔드포인트**
+```
+GET /api/business-process/o2c/stages/
+GET /api/business-process/o2c/orders/
+GET /api/business-process/ai/o2c/predictions/
+```
+
+### 9.2 P2P (Procure to Pay) 프로세스
+
+**프로세스 흐름**
+```
+구매 요청 → 견적 → 발주 → 입고 → 송장 → 지급
+```
+
+**주요 기능**
+- 공급업체별 발주 관리
+- 품질 검사 관리
+- 지급 최적화
+- AI 기반 예측 및 최적화 제안
+
+**API 엔드포인트**
+```
+GET /api/business-process/p2p/stages/
+GET /api/business-process/p2p/orders/
+GET /api/business-process/ai/p2p/predictions/
+```
+
+### 9.3 AI 기반 프로세스 분석
+
+**예측 분석**
+- 리드타임 예측
+- 완료율 예측
+- 이슈 발생 예측
+- 병목 구간 분석
+
+**최적화 제안**
+- 프로세스 개선 제안
+- 자원 배치 최적화
+- 자동화 기회 식별
+- 이상 징후 감지
 
 ---
 
-## 10. 연락처
+## 10. 라이선스
 
-- **문서 버전**: 1.1.0
-- **최종 수정일**: 2026-03-05
-- **프로젝트**: Netplus MIS-AI Dashboard (유한산업)
+Copyright (c) 2024 Claros. All rights reserved.
+
+---
+
+## 10. 추가 문서
+
+| 문서 | 설명 | 링크 |
+|------|------|------|
+| **TECHNICAL.md** | 상세 기술 문서 | [View](./TECHNICAL.md) |
+| **API.md** | API 명세서 | [View](./API.md) |
+| **DEPLOYMENT.md** | 배포 가이드 | [View](./DEPLOYMENT.md) |
+| **TECHNICAL_DOCUMENTATION.md** | 기존 기술 문서 | [View](./TECHNICAL_DOCUMENTATION.md) |
+
+### 기술 문서 개요
+
+#### TECHNICAL.md
+- 시스템 아키텍처 상세
+- 데이터베이스 스키마
+- 컴포넌트 구조
+- 상태 관리
+- 성능 최적화
+- 개발 워크플로우
+
+#### API.md
+- REST API 엔드포인트 전체 목록
+- 요청/응답 형식
+- 인증 방식 (JWT)
+- 에러 처리
+- WebSocket 이벤트
+- Rate Limiting
+
+#### DEPLOYMENT.md
+- 개발 환경 설정
+- 프로덕션 배포
+- Docker/Kubernetes 배포
+- 클라우드 플랫폼 배포 (AWS, GCP, Azure)
+- 데이터베이스 설정
+- 모니터링 및 로깅
+- 백업 및 복구
+- 보안 강화
+
+---
+
+## 11. 연락처 및 정보
+
+### 프로젝트 정보
+
+- **프로젝트명**: Claros MIS-AI Dashboard
+- **개발사**: Claros
+- **문서 버전**: 2.0.0
+- **최종 수정일**: 2026-03-31
+- **라이선스**: Copyright (c) 2024 Claros. All rights reserved.
+
+### 기술 지원
+
+- **이슈 트래킹**: GitHub Issues
+- **문서**: [Wiki](./docs/)
+- **API 문서**: http://localhost:8000/api/docs/
+
+---
+
+## 12. 변경 이력
+
+### 버전 2.0.0 (2026-03-31)
+
+#### 추가된 사항
+- **기술 문서 개편**: TECHNICAL.md, API.md, DEPLOYMENT.md 추가
+- **아키텍처 문서화**: 시스템 아키텍처 상세화
+- **API 문서 완성**: 전체 API 엔드포인트 문서화
+- **배포 가이드**: 다양한 배포 시나리오 추가
+
+#### 개선된 사항
+- **문서 구조화**: 목차별 상세 분류
+- **코드 예시**: 실용적인 코드 예제 추가
+- **배포 자동화**: Docker, Kubernetes 지원 강화
+
+### 버전 1.1.0 (2026-03-05)
+
+- 비즈니스 프로세스 관리 (O2C, P2P) 추가
+- AI 어시스턴트 기능 강화
+- 기존 기술 문서 보완
+
+### 버전 1.0.0 (2024-12-20)
+
+- 초기 프로젝트 릴리스
+- 기본 MIS 기능 구현
+- 8개 KPI 카테고리 지원

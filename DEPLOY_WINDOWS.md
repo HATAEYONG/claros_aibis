@@ -1,4 +1,4 @@
-# NetPlus MIS-AI Dashboard 배포 가이드
+# Claros MIS-AI Dashboard 배포 가이드
 # 고정 IP: 52.79.230.126
 
 ## Windows 배포 방법
@@ -19,7 +19,7 @@
 
 ```bash
 # 1. 프로젝트 디렉토리로 이동
-cd C:/work/claude_code/netplus-mis-ai-dashboard
+cd C:/work/claude_code/claros-mis-ai-dashboard
 
 # 2. 배포 스크립트 실행 (SSH 키 경로 지정)
 bash deploy-to-lightsail.sh "/path/to/your-key.pem"
@@ -39,8 +39,8 @@ curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker ubuntu
 
 # 3. 프로젝트 디렉토리 생성 및 이동
-mkdir -p ~/netplus-mis
-cd ~/netplus-mis
+mkdir -p ~/claros-mis
+cd ~/claros-mis
 
 # 4. Docker Compose 파일 생성
 cat > docker-compose.yml << 'EOF'
@@ -56,10 +56,10 @@ docker compose up -d
 
 ```bash
 # 컨테이너 상태 확인
-ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/netplus-mis && docker compose ps"
+ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/claros-mis && docker compose ps"
 
 # 로그 확인
-ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/netplus-mis && docker compose logs -f"
+ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/claros-mis && docker compose logs -f"
 ```
 
 ### 4. 접속 URL
@@ -78,7 +78,7 @@ bash update-lightsail.sh "your-key.pem"
 
 # 방법 2: 직접 SSH 접속 후
 ssh -i "your-key.pem" ubuntu@52.79.230.126
-cd ~/netplus-mis
+cd ~/claros-mis
 git pull  # Git 사용 시
 docker compose build
 docker compose up -d
@@ -88,12 +88,12 @@ docker compose up -d
 
 ```bash
 # 컨테이너 전체 재시작
-ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/netplus-mis && docker compose restart"
+ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/claros-mis && docker compose restart"
 
 # 컨테이너 전체 중지 및 삭제
-ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/netplus-mis && docker compose down"
+ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/claros-mis && docker compose down"
 
 # 로그 확인
-ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/netplus-mis && docker compose logs backend"
-ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/netplus-mis && docker compose logs frontend"
+ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/claros-mis && docker compose logs backend"
+ssh -i "your-key.pem" ubuntu@52.79.230.126 "cd ~/claros-mis && docker compose logs frontend"
 ```

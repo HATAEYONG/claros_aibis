@@ -1,4 +1,4 @@
-# NetPlus MIS-AI Dashboard 기술문서
+# AI & BI DeepSeeHub Platform 기술문서
 
 ## 📋 목차
 
@@ -22,7 +22,7 @@
 
 ### 1.1 프로젝트 소개
 
-**NetPlus MIS-AI Dashboard**는 제조업체를 위한 AI 기반 경영정보시스템(MIS) 대시보드입니다. 자연어 질의를 통한 데이터 조회, AI 예측, 온톨로지 기반 원인 분석 등의 기능을 제공합니다.
+**AI & BI DeepSeeHub Platform**는 제조업체를 위한 AI 기반 경영정보시스템(MIS) 대시보드입니다. 자연어 질의를 통한 데이터 조회, AI 예측, 온톨로지 기반 원인 분석 등의 기능을 제공합니다.
 
 ### 1.2 주요 기능
 
@@ -93,8 +93,8 @@
 ### 2.2 디렉토리 구조
 
 ```
-netplus-mis-ai-dashboard/
-├── netplus-mis-frontend/          # React Frontend
+claros-mis-ai-dashboard/
+├── claros-mis-frontend/          # React Frontend
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── chat/              # AI 채팅 컴포넌트
@@ -108,7 +108,7 @@ netplus-mis-ai-dashboard/
 │   │   └── App.tsx
 │   └── package.json
 │
-└── netplus-mis-backend/           # Django Backend
+└── claros-mis-backend/           # Django Backend
     ├── config/
     │   ├── celery.py            # Celery 앱 설정 (Priority Queues)
     │   ├── grafana_dashboards/  # Grafana 대시보드 JSON
@@ -221,7 +221,7 @@ netplus-mis-ai-dashboard/
 
 ```python
 # config/celery.py
-app = Celery('netplus_mis')
+app = Celery('claros_mis')
 
 # Priority Queues
 app.conf.task_routes = {
@@ -298,16 +298,16 @@ def calculate_kpi_task(kpi_type='all'):
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  Filebeat (Log Shipping)                    │
-│  - Reads /var/log/netplus/app.log                          │
+│  - Reads /var/log/claros/app.log                          │
 │  - Ships to Elasticsearch                                   │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  Elasticsearch (Log Storage)                │
-│  - Index: netplus-mis-app-*                                 │
-│  - Index: netplus-mis-errors-*                               │
-│  - Index: netplus-mis-audit-*                                │
+│  - Index: claros-mis-app-*                                 │
+│  - Index: claros-mis-errors-*                               │
+│  - Index: claros-mis-audit-*                                │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -327,7 +327,7 @@ def calculate_kpi_task(kpi_type='all'):
   "level": "INFO",
   "logger": "ai.views",
   "message": "AI prediction completed",
-  "app": "netplus-mis",
+  "app": "claros-mis",
   "environment": "production",
   "service": "backend",
   "request": {
@@ -347,9 +347,9 @@ def calculate_kpi_task(kpi_type='all'):
 
 | 인덱스 패턴 | 설명 | 예시 |
 |-----------|------|------|
-| `netplus-mis-app-*` | 일반 애플리케이션 로그 | `netplus-mis-app-2025.02.26` |
-| `netplus-mis-errors-*` | 에러 로그만 | `netplus-mis-errors-2025.02.26` |
-| `netplus-mis-audit-*` | 감사 로그 | `netplus-mis-audit-2025.02` |
+| `claros-mis-app-*` | 일반 애플리케이션 로그 | `claros-mis-app-2025.02.26` |
+| `claros-mis-errors-*` | 에러 로그만 | `claros-mis-errors-2025.02.26` |
+| `claros-mis-audit-*` | 감사 로그 | `claros-mis-audit-2025.02` |
 
 ### 5.4 로그 설정
 
@@ -363,11 +363,11 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'filename': '/var/log/netplus/app.log',
+            'filename': '/var/log/claros/app.log',
             'formatter': 'json',
         },
         'error_file': {
-            'filename': '/var/log/netplus/errors.log',
+            'filename': '/var/log/claros/errors.log',
             'formatter': 'json',
             'level': 'ERROR',
         },
@@ -465,7 +465,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'netplus-backend'
+  - job_name: 'claros-backend'
     static_configs:
       - targets: ['backend:8000']
     metrics_path: '/metrics'
@@ -633,7 +633,7 @@ SD_SALES (sales_id PK, sales_date, customer_code FK, quantity, amount)
 # 1. Docker Desktop 시작
 
 # 2. 모든 서비스 시작
-cd C:\work\claude_code\netplus-mis-ai-dashboard
+cd C:\work\claude_code\claros-mis-ai-dashboard
 docker-compose up -d
 
 # 3. 서비스 상태 확인
@@ -655,7 +655,7 @@ docker-compose down -v
 
 ```bash
 # 백엔드
-cd netplus-mis-backend
+cd claros-mis-backend
 python manage.py runserver 8000
 
 # Celery Worker
@@ -764,9 +764,9 @@ class MetricsCollector:
 # .env
 # Database
 DB_ENGINE=django.db.backends.postgresql
-DB_NAME=netplus_mis
-DB_USER=netplus_user
-DB_PASSWORD=netplus_password_2024
+DB_NAME=claros_mis
+DB_USER=claros_user
+DB_PASSWORD=claros_password_2024
 DB_HOST=db
 DB_PORT=5432
 
@@ -855,4 +855,4 @@ NETWORK_CHECK_INTERVAL=60
 
 **문서 버전**: 2.0.0
 **최종 수정일**: 2026-02-26
-**작성자**: NetPlus MIS-AI 팀
+**작성자**: AI & BI DeepSeeHub 팀

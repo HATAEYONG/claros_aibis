@@ -1,13 +1,13 @@
-# NetPlus MIS-AI Dashboard 실행방법
+# Claros MIS-AI Dashboard 실행방법
 
 ## 1. 개요
 
 본 프로젝트는 Django Backend와 React/TypeScript Frontend로 구성된 통합 MIS-AI 시스템입니다.
 
 ```
-netplus-mis-ai-dashboard/
-├── netplus-mis-backend/   # Django Backend (포트: 8000)
-└── netplus-mis-frontend/  # React Frontend (포트: 5173)
+claros-mis-ai-dashboard/
+├── claros-mis-backend/   # Django Backend (포트: 8000)
+└── claros-mis-frontend/  # React Frontend (포트: 5173)
 ```
 
 ---
@@ -30,12 +30,12 @@ netplus-mis-ai-dashboard/
 
 ```bash
 # Windows (PowerShell)
-cd netplus-mis-ai-dashboard\netplus-mis-backend
+cd claros-mis-ai-dashboard\claros-mis-backend
 python -m venv venv
 .\venv\Scripts\activate
 
 # Linux/Mac
-cd netplus-mis-ai-dashboard/netplus-mis-backend
+cd claros-mis-ai-dashboard/claros-mis-backend
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -98,7 +98,7 @@ Quit the server with CONTROL-C.
 ### 4.1 패키지 설치
 
 ```bash
-cd netplus-mis-frontend
+cd claros-mis-frontend
 npm install
 ```
 
@@ -145,7 +145,7 @@ npm run build
 
 ```powershell
 # 터미널 1개 - Backend
-cd netplus-mis-ai-dashboard\netplus-mis-backend
+cd claros-mis-ai-dashboard\claros-mis-backend
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
@@ -153,7 +153,7 @@ python manage.py migrate
 python manage.py runserver 8000
 
 # 터미널 2개 - Frontend (새 창 열기)
-cd netplus-mis-ai-dashboard\netplus-mis-frontend
+cd claros-mis-ai-dashboard\claros-mis-frontend
 npm install
 npm run dev
 ```
@@ -162,7 +162,7 @@ npm run dev
 
 ```bash
 # 터미널 1개 - Backend
-cd netplus-mis-ai-dashboard/netplus-mis-backend
+cd claros-mis-ai-dashboard/claros-mis-backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -170,7 +170,7 @@ python manage.py migrate
 python manage.py runserver 8000
 
 # 터미널 2개 - Frontend (새 창 열기)
-cd netplus-mis-ai-dashboard/netplus-mis-frontend
+cd claros-mis-ai-dashboard/claros-mis-frontend
 npm install
 npm run dev
 ```
@@ -192,7 +192,7 @@ npm run dev
 
 ### 7.1 Frontend 환경 변수
 
-파일: `netplus-mis-frontend/.env`
+파일: `claros-mis-frontend/.env`
 
 ```env
 # API Configuration
@@ -206,7 +206,7 @@ VITE_LLM_MODEL=gpt-4-turbo
 
 ### 7.2 Backend 환경 변수
 
-파일: `netplus-mis-backend/.env`
+파일: `claros-mis-backend/.env`
 
 ```env
 # Database Configuration (운영 MySQL 연동 시)
@@ -279,7 +279,7 @@ python manage.py migrate
 ### Backend (Django)
 
 ```
-netplus-mis-backend/
+claros-mis-backend/
 ├── config/              # 프로젝트 설정
 │   ├── settings.py      # Django 설정
 │   ├── urls.py          # URL 라우팅
@@ -306,7 +306,7 @@ netplus-mis-backend/
 ### Frontend (React)
 
 ```
-netplus-mis-frontend/
+claros-mis-frontend/
 ├── src/
 │   ├── components/      # React 컴포넌트
 │   │   ├── dashboard/   # 대시보드 관련
@@ -331,7 +331,7 @@ netplus-mis-frontend/
 
 ```bash
 # 1. Backend 시작
-cd netplus-mis-backend
+cd claros-mis-backend
 python -m venv venv
 .\venv\Scripts\activate  # Windows
 pip install -r requirements.txt
@@ -339,7 +339,7 @@ python manage.py migrate
 python manage.py runserver 8000
 
 # 2. Frontend 시작 (새 터미널)
-cd netplus-mis-frontend
+cd claros-mis-frontend
 npm install
 npm run dev
 
@@ -349,5 +349,5 @@ npm run dev
 
 ---
 
-**문서 작성**: NetPlus MIS-AI Dashboard 개발팀
+**문서 작성**: Claros MIS-AI Dashboard 개발팀
 **최종 수정일**: 2024-12-26

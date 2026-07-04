@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Responsive Design Base Styles
+   ============================================ */
+
+@layer base {
+  /* Mobile-first responsive typography */
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f3f4f6;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+    /* Smooth scrolling for anchor links */
+    scroll-behavior: smooth;
+  }
+
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+      monospace;
+  }
+
+  /* Responsive viewport meta tag is handled in index.html */
+  @viewport {
+    width: device-width;
+    initial-scale: 1.0;
+  }
+}
+
+@layer utilities {
+  /* Custom responsive utilities */
+  .responsive-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+
+  .responsive-flex {
+    @apply flex flex-col sm:flex-row lg:flex-wrap gap-4;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Safe area insets for mobile devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@layer components {
+  /* ============================================
+     Responsive Component Styles
+     ============================================ */
+
+  /* Mobile-friendly table styles */
+  .accounting-table {
+    @apply w-full text-sm sm:text-base;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .accounting-table th {
+    @apply bg-slate-50 border-b-2 border-slate-200 text-slate-600 font-semibold;
+    padding: 0.75rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  .accounting-table td {
+    @apply border-b border-slate-100;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .accounting-table tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .sub-row td {
+    @apply pl-6 text-slate-500 text-xs sm:text-sm;
+  }
+
+  .total-row td {
+    @apply font-bold bg-slate-50 text-slate-800;
+  }
+
+  /* Responsive card grid */
+  .card-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  /* Responsive KPI cards */
+  .kpi-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4;
+  }
+
+  /* Mobile-optimized touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Responsive sidebar */
+  .responsive-sidebar {
+    @apply fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300;
+  }
+
+  .responsive-sidebar.closed {
+    @apply -translate-x-full;
+  }
+
+  @media (min-width: 1024px) {
+    .responsive-sidebar {
+      @apply relative translate-x-0;
+    }
+  }
+
+  /* Responsive modal */
+  .responsive-modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  }
+
+  .responsive-modal-content {
+    @apply w-full max-w-md sm:max-w-lg lg:max-w-2xl;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  /* Chart container with responsive aspect ratio */
+  .chart-container {
+    @apply w-full;
+    aspect-ratio: 16 / 9;
+  }
+
+  @media (max-width: 640px) {
+    .chart-container {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  /* Mobile navigation */
+  .mobile-menu {
+    @apply fixed inset-0 z-50 bg-white;
+  }
+
+  .mobile-menu.closed {
+    @apply hidden;
+  }
+
+  /* Responsive text sizes */
+  .text-responsive-xl {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+
+  .text-responsive-base {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+
+  .text-responsive-sm {
+    @apply text-xs sm:text-sm lg:text-base;
+  }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+  body {
+    @apply bg-white text-black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  body.dark {
+    @apply bg-slate-900 text-white;
+  }
+
+  .accounting-table th {
+    @apply bg-slate-800 border-slate-700 text-slate-300;
+  }
+
+  .accounting-table td {
+    @apply border-slate-800;
+  }
+}
+
+/* ============================================
+   Loading and Animation States
+   ============================================ */
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.loading-skeleton {
+  @apply bg-slate-200 animate-pulse;
+  animation: pulse-subtle 1.5s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .loading-skeleton {
+    @apply bg-slate-700;
+  }
+}
+
+/* ============================================
+   Focus Visible for Keyboard Navigation
+   ============================================ */
+
+*:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+@media (prefers-color-scheme: dark) {
+  *:focus-visible {
+    @apply ring-offset-slate-900;
+  }
+}

@@ -1,14 +1,14 @@
 #!/bin/bash
 # ============================================================
-# NetPlus MIS-AI Dashboard Backend만 재배포
+# Claros MIS-AI Dashboard Backend만 재배포
 # 코드 수정 후 실행
 # ============================================================
 
 set -e
 
-BACKEND_DIR="/var/www/netplus-mis/backend"
-VENV_DIR="/var/www/netplus-mis/venv"
-SERVICE_NAME="netplus-mis"
+BACKEND_DIR="/var/www/claros-mis/backend"
+VENV_DIR="/var/www/claros-mis/venv"
+SERVICE_NAME="claros-mis"
 
 echo "=========================================="
 echo "  Backend 재배포 시작"
@@ -17,8 +17,8 @@ echo "=========================================="
 # 소스 코드 업데이트
 echo ""
 echo "[1/4] 소스 코드 업데이트..."
-# cd /home/ubuntu/netplus-mis-backend && git pull
-# sudo cp -r /home/ubuntu/netplus-mis-backend/* $BACKEND_DIR/
+# cd /home/ubuntu/claros-mis-backend && git pull
+# sudo cp -r /home/ubuntu/claros-mis-backend/* $BACKEND_DIR/
 
 # 가상환경 활성화 및 패키지 업데이트
 echo ""

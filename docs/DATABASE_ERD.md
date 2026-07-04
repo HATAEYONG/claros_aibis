@@ -1,4 +1,4 @@
-# Netplus MIS-AI Database ERD Technical Documentation
+# Claros MIS-AI Database ERD Technical Documentation
 
 ## Version Information
 - **Document Version**: 1.0.0
@@ -23,7 +23,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Netplus MIS Database                        │
+│                     Claros MIS Database                        │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
 │  │  Fact       │  │  Dimension  │  │  Application            │  │

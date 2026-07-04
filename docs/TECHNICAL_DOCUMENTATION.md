@@ -1,11 +1,11 @@
-# NetPlus MIS-AI Dashboard 기술문서
+# Claros MIS-AI Dashboard 기술문서
 
 ## 1. 시스템 개요
 
 ### 1.1 프로젝트 정보
-- **프로젝트명**: NetPlus MIS-AI Dashboard
+- **프로젝트명**: Claros MIS-AI Dashboard
 - **대상 기업**: 유한산업
-- **목적**: ERP(EMAX) 데이터와 연동하여 경영정보 시각화 및 AI 기반 분석 제공
+- **목적**: ERP(SAP) 데이터와 연동하여 경영정보 시각화 및 AI 기반 분석 제공
 - **아키텍처**: Django Backend + React/TypeScript Frontend
 
 ### 1.2 기술 스택
@@ -1770,7 +1770,7 @@ erDiagram
 ### 5.1 ERP 데이터 동기화 흐름
 
 ```
-EMAX ERP (원격 MySQL)
+SAP ERP (원격 MySQL)
     ↓ [API Scheduler]
 ERP Sync 테이블 (erp_sync 앱)
     ↓ [Transform/Aggregate]
@@ -1840,7 +1840,7 @@ LLM_MODEL=gpt-4-turbo
 
 ### 7.2 Django 앱 구조
 ```
-netplus-mis-backend/
+claros-mis-backend/
 ├── config/              # 프로젝트 설정
 ├── accounting/          # 회계 관리
 ├── production/          # 생산 관리
@@ -1891,5 +1891,5 @@ netplus-mis-backend/
 
 ---
 
-**문서 작성**: NetPlus MIS-AI Dashboard 개발팀
+**문서 작성**: Claros MIS-AI Dashboard 개발팀
 **최종 수정일**: 2024-12-26

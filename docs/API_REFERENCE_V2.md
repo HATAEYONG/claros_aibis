@@ -96,7 +96,7 @@ GET /api/erp-sync/sources/
       "description": "유한킴벌리 ERP 시스템",
       "host": "133.186.214.219",
       "port": 27455,
-      "database": "emax_yuhan",
+      "database": "sap_yuhan",
       "schema_name": "public",
       "username": "postgres",
       "is_default": true,
@@ -180,7 +180,7 @@ GET /api/erp-sync/sources/{id}/
   "description": "유한킴벌리 ERP 시스템",
   "host": "133.186.214.219",
   "port": 27455,
-  "database": "emax_yuhan",
+  "database": "sap_yuhan",
   "is_default": true,
   "is_active": true,
   "table_count": 90,
@@ -206,7 +206,7 @@ PUT /api/erp-sync/sources/{id}/
   "source_type": "postgresql",
   "host": "133.186.214.219",
   "port": 27455,
-  "database": "emax_yuhan",
+  "database": "sap_yuhan",
   "is_default": true,
   "is_active": true
 }

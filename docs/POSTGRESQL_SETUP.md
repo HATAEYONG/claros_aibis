@@ -2,7 +2,7 @@
 
 ## 개요
 
-Netplus MIS-AI Dashboard는 **PostgreSQL**을 기본 데이터베이스로 사용합니다.
+Claros MIS-AI Dashboard는 **PostgreSQL**을 기본 데이터베이스로 사용합니다.
 
 ## 데이터베이스 구성 옵션
 
@@ -19,7 +19,7 @@ Netplus MIS-AI Dashboard는 **PostgreSQL**을 기본 데이터베이스로 사�
 ### 1.1 docker-compose로 PostgreSQL 실행
 
 ```bash
-cd C:\work\claude_code\netplus-mis-ai-dashboard
+cd C:\work\claude_code\claros-mis-ai-dashboard
 
 # PostgreSQL 컨테이너만 실행
 docker-compose up -d db redis
@@ -31,16 +31,16 @@ docker-compose ps
 ### 1.2 .env 파일 설정
 
 ```bash
-cd netplus-mis-backend
+cd claros-mis-backend
 cp .env.example .env
 ```
 
 `.env` 파일에서 다음 설정 확인:
 ```env
 DB_TYPE=local
-DB_NAME=netplus_mis
-DB_USER=netplus_user
-DB_PASSWORD=netplus_password_2024
+DB_NAME=claros_mis
+DB_USER=claros_user
+DB_PASSWORD=claros_password_2024
 DB_HOST=db
 DB_PORT=5432
 ```
@@ -48,7 +48,7 @@ DB_PORT=5432
 ### 1.3 데이터베이스 마이그레이션
 
 ```bash
-cd netplus-mis-backend
+cd claros-mis-backend
 
 # Docker 컨테이너 내에서 마이그레이션 실행
 docker-compose exec backend python manage.py migrate
@@ -85,16 +85,16 @@ python manage.py createsuperuser
 
 ```sql
 -- 데이터베이스 생성
-CREATE DATABASE netplus_mis;
+CREATE DATABASE claros_mis;
 
 -- 사용자 생성
-CREATE USER netplus_user WITH PASSWORD 'netplus_password';
+CREATE USER claros_user WITH PASSWORD 'claros_password';
 
 -- 권한 부여
-GRANT ALL PRIVILEGES ON DATABASE netplus_mis TO netplus_user;
+GRANT ALL PRIVILEGES ON DATABASE claros_mis TO claros_user;
 
 -- 데이터베이스 소유자 변경
-ALTER DATABASE netplus_mis OWNER TO netplus_user;
+ALTER DATABASE claros_mis OWNER TO claros_user;
 
 -- 종료
 \q
@@ -104,9 +104,9 @@ ALTER DATABASE netplus_mis OWNER TO netplus_user;
 
 ```env
 DB_TYPE=local
-DB_NAME=netplus_mis
-DB_USER=netplus_user
-DB_PASSWORD=netplus_password
+DB_NAME=claros_mis
+DB_USER=claros_user
+DB_PASSWORD=claros_password
 DB_HOST=localhost
 DB_PORT=5432
 ```
@@ -114,7 +114,7 @@ DB_PORT=5432
 ### 2.4 마이그레이션 실행
 
 ```bash
-cd netplus-mis-backend
+cd claros-mis-backend
 python manage.py migrate
 ```
 
@@ -123,7 +123,7 @@ python manage.py migrate
 ## 3. 데이터베이스 연결 테스트
 
 ```bash
-cd netplus-mis-backend
+cd claros-mis-backend
 
 # Django 쉘 실행
 python manage.py shell
@@ -181,20 +181,20 @@ python manage.py loaddata initial_data
 
 ```bash
 # Docker 컨테이너에서 백업
-docker-compose exec db pg_dump -U netplus_user netplus_mis > backup_$(date +%Y%m%d).sql
+docker-compose exec db pg_dump -U claros_user claros_mis > backup_$(date +%Y%m%d).sql
 
 # 로컬 PostgreSQL에서 백업
-pg_dump -U netplus_user -h localhost netplus_mis > backup_$(date +%Y%m%d).sql
+pg_dump -U claros_user -h localhost claros_mis > backup_$(date +%Y%m%d).sql
 ```
 
 ### 5.2 복구
 
 ```bash
 # Docker 컨테이너에서 복구
-docker-compose exec -T db psql -U netplus_user netplus_mis < backup_20250228.sql
+docker-compose exec -T db psql -U claros_user claros_mis < backup_20250228.sql
 
 # 로컬 PostgreSQL에서 복구
-psql -U netplus_user -h localhost netplus_mis < backup_20250228.sql
+psql -U claros_user -h localhost claros_mis < backup_20250228.sql
 ```
 
 ---
@@ -230,9 +230,9 @@ log_statement = 'mod'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'netplus_mis',
-        'USER': 'netplus_user',
-        'PASSWORD': 'netplus_password',
+        'NAME': 'claros_mis',
+        'USER': 'claros_user',
+        'PASSWORD': 'claros_password',
         'HOST': 'localhost',
         'PORT': '5432',
         'OPTIONS': {
@@ -272,11 +272,11 @@ password authentication failed
 ### 7.3 데이터베이스가 없음
 
 ```
-database "netplus_mis" does not exist
+database "claros_mis" does not exist
 ```
 
 해결:
-1. `CREATE DATABASE netplus_mis;` 실행
+1. `CREATE DATABASE claros_mis;` 실행
 
 ---
 
@@ -300,7 +300,7 @@ DB_PORT=27455
 ## 9. Django Docker Compose 전체 실행
 
 ```bash
-cd C:\work\claude_code\netplus-mis-ai-dashboard
+cd C:\work\claude_code\claros-mis-ai-dashboard
 
 # 모든 서비스 실행
 docker-compose up -d

@@ -1,0 +1,89 @@
+version: "3.9"
+services:
+  api-gateway:
+    build: ./services/api-gateway
+    command: sh -c "python manage.py migrate && python manage.py seed_demo && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      EVENT_HUB_URL: http://event-hub-api:8082
+      AI_RISK_URL: http://ai-risk-service:8200
+      FORECAST_URL: http://forecasting-service:8250
+      ALERT_SERVICE_URL: http://alert-service:8300
+      WORKFLOW_SERVICE_URL: http://workflow-service:8400
+      OCPM_SERVICE_URL: http://ocpm-service:8500
+    volumes:
+      - ./services/api-gateway:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - event-hub-api
+      - ai-risk-service
+      - forecasting-service
+      - alert-service
+      - workflow-service
+      - ocpm-service
+
+  event-hub-api:
+    build: ./services/event-hub-api
+    command: uvicorn main:app --host 0.0.0.0 --port 8082
+    volumes:
+      - ./services/event-hub-api:/app
+    ports:
+      - "8082:8082"
+
+  ai-risk-service:
+    build: ./services/ai-risk-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8200
+    volumes:
+      - ./services/ai-risk-service:/app
+    ports:
+      - "8200:8200"
+
+  forecasting-service:
+    build: ./services/forecasting-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8250
+    volumes:
+      - ./services/forecasting-service:/app
+    ports:
+      - "8250:8250"
+
+  alert-service:
+    build: ./services/alert-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8300
+    volumes:
+      - ./services/alert-service:/app
+    ports:
+      - "8300:8300"
+
+  workflow-service:
+    build: ./services/workflow-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8400
+    volumes:
+      - ./services/workflow-service:/app
+    ports:
+      - "8400:8400"
+
+  ocpm-service:
+    build: ./services/ocpm-service
+    command: uvicorn main:app --host 0.0.0.0 --port 8500
+    volumes:
+      - ./services/ocpm-service:/app
+    ports:
+      - "8500:8500"
+
+  graph-sync-worker:
+    build: ./services/graph-sync-worker
+    command: python worker.py
+    environment:
+      OCPM_SERVICE_URL: http://ocpm-service:8500
+    volumes:
+      - ./services/graph-sync-worker:/app
+    depends_on:
+      - ocpm-service
+
+  frontend:
+    build: ./frontend
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"

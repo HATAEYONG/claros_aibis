@@ -1,5 +1,5 @@
 # YH Database Configuration Guide
-## NetPlus MIS-AI Dashboard 실제 데이터베이스 연결 설정
+## Claros MIS-AI Dashboard 실제 데이터베이스 연결 설정
 
 ### 데이터베이스 연결 정보
 
@@ -14,7 +14,7 @@ SSL Mode: require
 
 ### Django 설정 (settings.py)
 
-이미 `netplus-mis-backend/config/settings.py`에 설정이 적용되었습니다:
+이미 `claros-mis-backend/config/settings.py`에 설정이 적용되었습니다:
 
 ```python
 DATABASES = {
@@ -179,7 +179,7 @@ Please check network connectivity and firewall settings.
 
 현재 개발 환경에서는 다음과 같이 테스트할 수 있습니다:
 
-1. **테스트 페이지 열기**: `netplus-mis-frontend/test-yh-connection.html`
+1. **테스트 페이지 열기**: `claros-mis-frontend/test-yh-connection.html`
 2. **API 직접 테스트**:
    ```bash
    curl http://localhost:8000/api/yh/config/

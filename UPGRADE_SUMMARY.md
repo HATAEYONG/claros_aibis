@@ -1,9 +1,9 @@
-# NetPlus MIS-AI Dashboard 업그레이드 요약
+# Claros MIS-AI Dashboard 업그레이드 요약
 
 ## 업그레이드 개요
 
 **업그레이드 일자:** 2026년 2월 28일
-**대상 시스템:** NetPlus MIS-AI Dashboard Backend & Frontend
+**대상 시스템:** Claros MIS-AI Dashboard Backend & Frontend
 **업그레이드 범위:** Django, React, TypeScript, Vite, 의존성 라이브러리, 신규 기능 추가
 
 ---
@@ -191,11 +191,11 @@ python manage.py loaddata backup.json
 ### 5.2 의존성 업그레이드
 ```bash
 # 백엔드
-cd netplus-mis-backend
+cd claros-mis-backend
 pip install -r requirements.txt --upgrade
 
 # 프론트엔드
-cd netplus-mis-frontend
+cd claros-mis-frontend
 npm install
 ```
 
@@ -292,6 +292,6 @@ pip install --force-reinstall <package>
 ## 10. 지원
 
 문제가 발생할 경우:
-- GitHub Issues: https://github.com/netplus/mis-ai-dashboard/issues
+- GitHub Issues: https://github.com/claros/mis-ai-dashboard/issues
 - 기술 문서: `TECHNICAL_DOCUMENTATION.md`
 - 데이터베이스 설정: `YH_DATABASE_SETUP.md`

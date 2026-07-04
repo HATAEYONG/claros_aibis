@@ -1,4 +1,4 @@
-# NetPlus MIS-AI Dashboard 시스템 아키텍처
+# Claros MIS-AI Dashboard 시스템 아키텍처
 
 ## 문서 정보
 
@@ -73,7 +73,7 @@
                     ▼                                   ▼
 ┌─────────────────────────────┐   ┌─────────────────────────────────┐
 │     POSTGRESQL DB            │   │      ERP SOURCES                │
-│  (NetPlus MIS Data)          │   │  ┌─────────────────────────┐   │
+│  (Claros MIS Data)          │   │  ┌─────────────────────────┐   │
 │  ┌───────────────────────┐   │   │  │  YH ERP (PostgreSQL)    │   │
 │  │ erp_source           │   │   │  │  Host: 133.186.214.219 │   │
 │  │ erp_table_definition │   │   │  │  Port: 27455           │   │
@@ -178,7 +178,7 @@ src/
 ### 2.2 Backend 컴포넌트 구조
 
 ```
-netplus-mis-backend/
+claros-mis-backend/
 ├── erp_sync/
 │   ├── models/                  # Django 모델
 │   │   ├── __init__.py
@@ -391,10 +391,10 @@ services:
       - backend
 
   backend:
-    build: ./netplus-mis-backend
+    build: ./claros-mis-backend
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/netplus_mis
+      - DATABASE_URL=postgresql://postgres:password@db:5432/claros_mis
       - YH_ERP_HOST=133.186.214.219
       - YH_ERP_PORT=27455
     depends_on:
@@ -405,7 +405,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=netplus_mis
+      - POSTGRES_DB=claros_mis
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
 
@@ -490,8 +490,8 @@ DB_ENCRYPTION = True            # DB 암호화
 
 # 2. CORS 설정
 CORS_ALLOWED_ORIGINS = [
-    'https://mis.netplus.co.kr',
-    'https://erp-mapping.netplus.co.kr'
+    'https://mis.claros.co.kr',
+    'https://erp-mapping.claros.co.kr'
 ]
 
 # 3. Rate Limiting
@@ -558,7 +558,7 @@ ERP_SOURCES = {
     },
     'FOM': {
         'engine': 'mssql+pymssql',
-        'host': 'fom-server.netplus.co.kr',
+        'host': 'fom-server.claros.co.kr',
         'port': 1433,
         'database': 'FOM_DB',
         'pool_size': 3,
@@ -566,7 +566,7 @@ ERP_SOURCES = {
     },
     'SAP': {
         'engine': 'oracle+cx_oracle',
-        'host': 'sap-server.netplus.co.kr',
+        'host': 'sap-server.claros.co.kr',
         'port': 1521,
         'service_name': 'SAP_SERVICE',
         'pool_size': 2,

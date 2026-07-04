@@ -1,10 +1,10 @@
-# Prometheus Configuration for NetPlus MIS-AI Dashboard
+# Prometheus Configuration for Claros MIS-AI Dashboard
 
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'netplus-mis'
+    cluster: 'claros-mis'
     environment: 'production'
 
 # Alertmanager configuration (optional)
@@ -20,11 +20,11 @@ global:
 # Scrape configurations
 scrape_configs:
   # Backend application metrics
-  - job_name: 'netplus-backend'
+  - job_name: 'claros-backend'
     static_configs:
       - targets: ['backend:8000']
         labels:
-          app: 'netplus-mis'
+          app: 'claros-mis'
           component: 'backend'
     metrics_path: '/metrics'
     scrape_interval: 10s
@@ -34,7 +34,7 @@ scrape_configs:
     static_configs:
       - targets: ['celery-worker:9540']
         labels:
-          app: 'netplus-mis'
+          app: 'claros-mis'
           component: 'celery'
 
   # Prometheus self-monitoring

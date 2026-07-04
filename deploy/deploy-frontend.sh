@@ -1,13 +1,13 @@
 #!/bin/bash
 # ============================================================
-# NetPlus MIS-AI Dashboard Frontend만 재배포
+# Claros MIS-AI Dashboard Frontend만 재배포
 # 코드 수정 후 실행
 # ============================================================
 
 set -e
 
-FRONTEND_DIR="/var/www/netplus-mis/frontend"
-BACKUP_DIR="/var/www/netplus-mis/backup"
+FRONTEND_DIR="/var/www/claros-mis/frontend"
+BACKUP_DIR="/var/www/claros-mis/backup"
 
 echo "=========================================="
 echo "  Frontend 재배포 시작"
@@ -22,8 +22,8 @@ sudo cp -r $FRONTEND_DIR/dist $BACKUP_DIR/dist-$(date +%Y%m%d_%H%M%S) || true
 # 소스 코드 업데이트 (git pull 또는 rsync)
 echo ""
 echo "[2/4] 소스 코드 업데이트..."
-# cd /home/ubuntu/netplus-mis-frontend && git pull
-# cp -r /home/ubuntu/netplus-mis-frontend/* $FRONTEND_DIR/
+# cd /home/ubuntu/claros-mis-frontend && git pull
+# cp -r /home/ubuntu/claros-mis-frontend/* $FRONTEND_DIR/
 
 # npm install 및 빌드
 echo ""

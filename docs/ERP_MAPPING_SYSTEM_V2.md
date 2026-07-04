@@ -531,7 +531,7 @@ http://localhost:8000/api/erp-sync/
   "source_type": "postgresql",
   "host": "133.186.214.219",
   "port": 27455,
-  "database": "emax_yuhan",
+  "database": "sap_yuhan",
   "username": "postgres",
   "password": "password",
   "is_default": true,

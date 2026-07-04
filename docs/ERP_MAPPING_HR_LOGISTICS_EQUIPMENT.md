@@ -437,6 +437,6 @@ def test_equipment_connection():
 
 ## 7. 참고 문서
 
-- EMAX_table_yuhan.csv - ERP 테이블 정의서
+- SAP_table_yuhan.csv - ERP 테이블 정의서
 - ERP_MAPPING_SYSTEM.md - 매핑 시스템 설계 문서
 - DATABASE_SCHEMA.md - 데이터베이스 스키마 정의서

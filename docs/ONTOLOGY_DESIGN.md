@@ -1026,4 +1026,4 @@ interface OutsourcingData {
 **작성일**: 2025-12-26
 **수정일**: 2026-03-05
 **작성자**: Claude AI Assistant
-**프로젝트**: NetPlus MIS-AI Dashboard (유한산업)
+**프로젝트**: Claros MIS-AI Dashboard (유한산업)

@@ -14,7 +14,7 @@ wsl --install
 ### 2. 프로젝트 PostgreSQL 실행
 
 ```bash
-cd C:\work\claude_code\netplus-mis-ai-dashboard
+cd C:\work\claude_code\claros-mis-ai-dashboard
 
 # PostgreSQL 컨테이너 시작
 docker-compose up -d db redis
@@ -25,12 +25,12 @@ docker-compose ps
 
 ### 3. 데이터베이스 설정
 
-`netplus-mis-backend/.env` 파일:
+`claros-mis-backend/.env` 파일:
 ```env
 DB_TYPE=local
-DB_NAME=netplus_mis
-DB_USER=netplus_user
-DB_PASSWORD=netplus_password_2024
+DB_NAME=claros_mis
+DB_USER=claros_user
+DB_PASSWORD=claros_password_2024
 DB_HOST=db
 DB_PORT=5432
 ```
@@ -79,13 +79,13 @@ Password: (설치 시 입력한 비밀번호)
 
 ```sql
 -- 데이터베이스 생성
-CREATE DATABASE netplus_mis;
+CREATE DATABASE claros_mis;
 
 -- 사용자 생성
-CREATE USER netplus_user WITH PASSWORD 'netplus_password';
+CREATE USER claros_user WITH PASSWORD 'claros_password';
 
 -- 권한 부여
-GRANT ALL PRIVILEGES ON DATABASE netplus_mis TO netplus_user;
+GRANT ALL PRIVILEGES ON DATABASE claros_mis TO claros_user;
 
 -- 종료
 \q
@@ -96,19 +96,19 @@ GRANT ALL PRIVILEGES ON DATABASE netplus_mis TO netplus_user;
 1. pgAdmin 4 실행
 2. Servers > PostgreSQL 15 > Databases 우클릭
 3. Create > Database
-   - Database: `netplus_mis`
+   - Database: `claros_mis`
 4. Login/Group Roles 우클릭 > Create > Login/Group Role
-   - Name: `netplus_user`
-   - Password: `netplus_password`
+   - Name: `claros_user`
+   - Password: `claros_password`
 
 ### 5. .env 파일 설정
 
-`netplus-mis-backend\.env`:
+`claros-mis-backend\.env`:
 ```env
 DB_TYPE=local
-DB_NAME=netplus_mis
-DB_USER=netplus_user
-DB_PASSWORD=netplus_password
+DB_NAME=claros_mis
+DB_USER=claros_user
+DB_PASSWORD=claros_password
 DB_HOST=localhost
 DB_PORT=5432
 ```
@@ -116,7 +116,7 @@ DB_PORT=5432
 ### 6. Django 마이그레이션
 
 ```cmd
-cd C:\work\claude_code\netplus-mis-ai-dashboard\netplus-mis-backend
+cd C:\work\claude_code\claros-mis-ai-dashboard\claros-mis-backend
 
 # 의존성 설치
 pip install psycopg2-binary
@@ -163,9 +163,9 @@ psql -U postgres
 ```
 
 ```sql
-CREATE DATABASE netplus_mis;
-CREATE USER netplus_user WITH PASSWORD 'netplus_password';
-GRANT ALL PRIVILEGES ON DATABASE netplus_mis TO netplus_user;
+CREATE DATABASE claros_mis;
+CREATE USER claros_user WITH PASSWORD 'claros_password';
+GRANT ALL PRIVILEGES ON DATABASE claros_mis TO claros_user;
 \q
 ```
 
@@ -217,7 +217,7 @@ port 5432 is already in use
 ## 설치 완료 후 테스트
 
 ```cmd
-cd C:\work\claude_code\netplus-mis-ai-dashboard\netplus-mis-backend
+cd C:\work\claude_code\claros-mis-ai-dashboard\claros-mis-backend
 
 # 연결 테스트
 python manage.py check

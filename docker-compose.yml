@@ -1,24 +1,24 @@
-# Docker Compose for NetPlus MIS-AI Dashboard
+# Docker Compose for Claros MIS-AI Dashboard
 # Production deployment with Celery, ELK Stack, and Prometheus/Grafana
 
 services:
   # PostgreSQL Database
   db:
     image: postgres:15-alpine
-    container_name: netplus-postgres
+    container_name: claros-postgres
     restart: always
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: netplus_mis
-      POSTGRES_USER: netplus_user
-      POSTGRES_PASSWORD: netplus_password_2024
+      POSTGRES_DB: claros_mis
+      POSTGRES_USER: claros_user
+      POSTGRES_PASSWORD: claros_password_2024
     networks:
-      - netplus-network
+      - claros-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U netplus_user"]
+      test: ["CMD-SHELL", "pg_isready -U claros_user"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +26,7 @@ services:
   # Redis (Celery broker & cache)
   redis:
     image: redis:7-alpine
-    container_name: netplus-redis
+    container_name: claros-redis
     restart: always
     ports:
       - "6379:6379"
@@ -34,7 +34,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - netplus-network
+      - claros-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -44,22 +44,22 @@ services:
   # Django Backend
   backend:
     build:
-      context: ./netplus-mis-backend
+      context: ./claros-mis-backend
       dockerfile: Dockerfile
-    container_name: netplus-backend
+    container_name: claros-backend
     restart: always
     volumes:
       - backend_static:/app/staticfiles
       - backend_media:/app/media
-      - ./netplus-mis-backend/logs:/var/log/netplus
+      - ./claros-mis-backend/logs:/var/log/claros
     environment:
       DEBUG: False
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production-min-50-chars}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
       DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: netplus_mis
-      DB_USER: netplus_user
-      DB_PASSWORD: netplus_password_2024
+      DB_NAME: claros_mis
+      DB_USER: claros_user
+      DB_PASSWORD: claros_password_2024
       DB_HOST: db
       DB_PORT: 5432
       CORS_ALLOW_ALL_ORIGINS: "False"
@@ -82,16 +82,16 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - netplus-network
+      - claros-network
     ports:
       - "8000:8000"
 
   # Celery Worker (with priority queues)
   celery-worker:
     build:
-      context: ./netplus-mis-backend
+      context: ./claros-mis-backend
       dockerfile: Dockerfile
-    container_name: netplus-celery-worker
+    container_name: claros-celery-worker
     restart: always
     command: >
       celery -A config worker
@@ -100,14 +100,14 @@ services:
       --autoscale=2,8
       --queues=high,medium,low
     volumes:
-      - ./netplus-mis-backend/logs:/var/log/netplus
+      - ./claros-mis-backend/logs:/var/log/claros
     environment:
       DEBUG: False
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production-min-50-chars}
       DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: netplus_mis
-      DB_USER: netplus_user
-      DB_PASSWORD: netplus_password_2024
+      DB_NAME: claros_mis
+      DB_USER: claros_user
+      DB_PASSWORD: claros_password_2024
       DB_HOST: db
       DB_PORT: 5432
       CELERY_BROKER_URL: redis://redis:6379/0
@@ -119,25 +119,25 @@ services:
       - db
       - redis
     networks:
-      - netplus-network
+      - claros-network
 
   # Celery Beat Scheduler
   celery-beat:
     build:
-      context: ./netplus-mis-backend
+      context: ./claros-mis-backend
       dockerfile: Dockerfile
-    container_name: netplus-celery-beat
+    container_name: claros-celery-beat
     restart: always
     command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
-      - ./netplus-mis-backend/logs:/var/log/netplus
+      - ./claros-mis-backend/logs:/var/log/claros
     environment:
       DEBUG: False
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production-min-50-chars}
       DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: netplus_mis
-      DB_USER: netplus_user
-      DB_PASSWORD: netplus_password_2024
+      DB_NAME: claros_mis
+      DB_USER: claros_user
+      DB_PASSWORD: claros_password_2024
       DB_HOST: db
       DB_PORT: 5432
       CELERY_BROKER_URL: redis://redis:6379/0
@@ -148,14 +148,14 @@ services:
       - db
       - redis
     networks:
-      - netplus-network
+      - claros-network
 
   # Flower (Celery Monitoring)
   flower:
     build:
-      context: ./netplus-mis-backend
+      context: ./claros-mis-backend
       dockerfile: Dockerfile
-    container_name: netplus-flower
+    container_name: claros-flower
     restart: always
     command: celery -A config flower --port=5555 --broker=redis://redis:6379/0
     ports:
@@ -166,12 +166,12 @@ services:
     depends_on:
       - redis
     networks:
-      - netplus-network
+      - claros-network
 
   # Elasticsearch
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
-    container_name: netplus-elasticsearch
+    container_name: claros-elasticsearch
     restart: always
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
@@ -180,7 +180,7 @@ services:
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     networks:
-      - netplus-network
+      - claros-network
     ports:
       - "9200:9200"
     healthcheck:
@@ -192,7 +192,7 @@ services:
   # Kibana
   kibana:
     image: docker.elastic.co/kibana/kibana:8.12.0
-    container_name: netplus-kibana
+    container_name: claros-kibana
     restart: always
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
@@ -200,14 +200,14 @@ services:
       elasticsearch:
         condition: service_healthy
     networks:
-      - netplus-network
+      - claros-network
     ports:
       - "5601:5601"
 
   # Prometheus
   prometheus:
     image: prom/prometheus:v2.50.0
-    container_name: netplus-prometheus
+    container_name: claros-prometheus
     restart: always
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -218,19 +218,19 @@ services:
       - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks:
-      - netplus-network
+      - claros-network
     ports:
       - "9090:9090"
 
   # Grafana
   grafana:
     image: grafana/grafana:10.3.0
-    container_name: netplus-grafana
+    container_name: claros-grafana
     restart: always
     volumes:
       - grafana_data:/var/lib/grafana
       - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./netplus-mis-backend/config/grafana_dashboards:/var/lib/grafana/dashboards:ro
+      - ./claros-mis-backend/config/grafana_dashboards:/var/lib/grafana/dashboards:ro
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
@@ -240,23 +240,23 @@ services:
     depends_on:
       - prometheus
     networks:
-      - netplus-network
+      - claros-network
     ports:
       - "3000:3000"
 
   # React Frontend (with nginx)
   frontend:
     build:
-      context: ./netplus-mis-frontend
+      context: ./claros-mis-frontend
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-    container_name: netplus-frontend
+    container_name: claros-frontend
     restart: always
     depends_on:
       - backend
     networks:
-      - netplus-network
+      - claros-network
     ports:
       - "80:80"
       - "443:443"
@@ -271,5 +271,5 @@ volumes:
   backend_media:
 
 networks:
-  netplus-network:
+  claros-network:
     driver: bridge

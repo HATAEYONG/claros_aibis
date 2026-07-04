@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# NetPlus MIS-AI Dashboard AWS Lightsail 배포 스크립트
+# Claros MIS-AI Dashboard AWS Lightsail 배포 스크립트
 # 고정 IP: 52.79.230.126
 # ============================================================
 
@@ -16,7 +16,7 @@ if [ -z "$KEY_PATH" ]; then
 fi
 
 echo "=========================================="
-echo "  NetPlus MIS-AI Dashboard 배포"
+echo "  Claros MIS-AI Dashboard 배포"
 echo "  서버: $SERVER_IP"
 echo "=========================================="
 
@@ -38,27 +38,27 @@ ENDSSH
 echo ""
 echo "[2/6] 프로젝트 디렉토리 생성..."
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
-mkdir -p ~/netplus-mis
-cd ~/netplus-mis
+mkdir -p ~/claros-mis
+cd ~/claros-mis
 ENDSSH
 
 # 3. 파일 업로드
 echo ""
 echo "[3/6] 프로젝트 파일 업로드..."
 echo "  - docker-compose.yml"
-scp -i "$KEY_PATH" -o StrictHostKeyChecking=no docker-compose.yml $SERVER_USER@$SERVER_IP:~/netplus-mis/
+scp -i "$KEY_PATH" -o StrictHostKeyChecking=no docker-compose.yml $SERVER_USER@$SERVER_IP:~/claros-mis/
 
-echo "  - netplus-mis-backend/"
-scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r netplus-mis-backend $SERVER_USER@$SERVER_IP:~/netplus-mis/
+echo "  - claros-mis-backend/"
+scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r claros-mis-backend $SERVER_USER@$SERVER_IP:~/claros-mis/
 
-echo "  - netplus-mis-frontend/"
-scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r netplus-mis-frontend $SERVER_USER@$SERVER_IP:~/netplus-mis/
+echo "  - claros-mis-frontend/"
+scp -i "$KEY_PATH" -o StrictHostKeyChecking=no -r claros-mis-frontend $SERVER_USER@$SERVER_IP:~/claros-mis/
 
 # 4. 환경변수 설정
 echo ""
 echo "[4/6] 환경변수 설정..."
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
-cd ~/netplus-mis
+cd ~/claros-mis
 
 cat > .env << EOF
 SECRET_KEY=$(openssl rand -base64 50)
@@ -74,7 +74,7 @@ ENDSSH
 echo ""
 echo "[5/6] Docker 컨테이너 빌드 및 시작..."
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
-cd ~/netplus-mis
+cd ~/claros-mis
 
 # 기존 컨테이너 중지
 docker compose down 2>/dev/null || true
@@ -96,7 +96,7 @@ ENDSSH
 echo ""
 echo "[6/6] 배포 상태 확인..."
 ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
-cd ~/netplus-mis
+cd ~/claros-mis
 echo ""
 echo "=========================================="
 echo "  컨테이너 상태"
@@ -123,5 +123,5 @@ echo "  Swagger:   http://52.79.230.126/swagger/"
 echo ""
 echo "유용한 명령어:"
 echo "  ssh -i $KEY_PATH $SERVER_USER@$SERVER_IP"
-echo "  로그 보기: ssh -i $KEY_PATH $SERVER_USER@$SERVER_IP 'cd ~/netplus-mis && docker compose logs -f'"
+echo "  로그 보기: ssh -i $KEY_PATH $SERVER_USER@$SERVER_IP 'cd ~/claros-mis && docker compose logs -f'"
 echo ""

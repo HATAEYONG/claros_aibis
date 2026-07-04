@@ -1,4 +1,4 @@
-# Netplus MIS-AI Database ERD (Mermaid)
+# Claros MIS-AI Database ERD (Mermaid)
 
 This document contains Mermaid diagrams that can be rendered in:
 - GitHub/GitLab
@@ -11,7 +11,7 @@ This document contains Mermaid diagrams that can be rendered in:
 
 ```mermaid
 graph TB
-    subgraph "Netplus MIS Database"
+    subgraph "Claros MIS Database"
         FT[Fact Tables<br/>팩트 테이블]
         DT[Dimension Tables<br/>마스터 테이블]
         AT[Application Tables<br/>업무 테이블]
@@ -577,7 +577,7 @@ mindmap
 
 ```mermaid
 graph TB
-    subgraph "Netplus MIS-AI Dashboard"
+    subgraph "Claros MIS-AI Dashboard"
         direction TB
 
         subgraph "Financial Module"

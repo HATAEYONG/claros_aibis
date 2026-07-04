@@ -1,14 +1,14 @@
 [Unit]
-Description=NetPlus MIS-AI Dashboard Gunicorn Daemon
+Description=Claros MIS-AI Dashboard Gunicorn Daemon
 After=network.target
 
 [Service]
 Type=notify
 User=www-data
 Group=www-data
-RuntimeDirectory=netplus-mis
-WorkingDirectory=/var/www/netplus-mis/backend
-ExecStart=/var/www/netplus-mis/venv/bin/gunicorn \
+RuntimeDirectory=claros-mis
+WorkingDirectory=/var/www/claros-mis/backend
+ExecStart=/var/www/claros-mis/venv/bin/gunicorn \
     --config python:/config/gunicorn.py \
     config.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID

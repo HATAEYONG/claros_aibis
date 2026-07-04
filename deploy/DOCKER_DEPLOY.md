@@ -42,7 +42,7 @@ sudo ./deploy-docker.sh
 ## 5. 코드 업데이트 후 재배포
 
 ```bash
-cd /home/ubuntu/netplus-mis
+cd /home/ubuntu/claros-mis
 
 # Git 사용 시
 git pull
@@ -73,10 +73,10 @@ docker compose down
 docker compose down --volumes
 
 # DB 백업
-docker exec netplus-postgres pg_dump -U netplus_user netplus_mis > backup.sql
+docker exec claros-postgres pg_dump -U claros_user claros_mis > backup.sql
 
 # DB 복원
-docker exec -i netplus-postgres psql -U netplus_user netplus_mis < backup.sql
+docker exec -i claros-postgres psql -U claros_user claros_mis < backup.sql
 ```
 
 ## 7. 접속 URL
@@ -91,14 +91,14 @@ docker exec -i netplus-postgres psql -U netplus_user netplus_mis < backup.sql
 ## 8. 파일 구조
 
 ```
-netplus-mis-ai-dashboard/
+claros-mis-ai-dashboard/
 ├── docker-compose.yml      # Docker Compose 설정
 ├── deploy-docker.sh        # 배포 스크립트
-├── netplus-mis-backend/
+├── claros-mis-backend/
 │   ├── Dockerfile          # Backend Docker 이미지
 │   └── config/
 │       └── gunicorn.py    # Gunicorn 설정
-└── netplus-mis-frontend/
+└── claros-mis-frontend/
     ├── Dockerfile          # Frontend Docker 이미지
     └── nginx.conf         # Nginx 설정
 ```

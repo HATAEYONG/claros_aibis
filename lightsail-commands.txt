@@ -1,0 +1,1 @@
+# AWS Lightsail 브라우저 SSH 배포 명령</tool_call>

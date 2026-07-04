@@ -1,9 +1,9 @@
 @echo off
-REM NetPlus MIS Backend 시작 스크립트
+REM Claros MIS Backend 시작 스크립트
 REM 가상환경 생성, 패키지 설치, 마이그레이션, 서버 시작을 자동으로 수행
 
 echo ============================================
-echo NetPlus MIS Backend - 자동 시작
+echo Claros MIS Backend - 자동 시작
 echo ============================================
 echo.
 

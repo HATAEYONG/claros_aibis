@@ -21,7 +21,7 @@
       "type": "elasticsearch",
       "access": "proxy",
       "url": "http://elasticsearch:9200",
-      "database": "netplus-mis-*",
+      "database": "claros-mis-*",
       "basicAuth": false,
       "editable": true,
       "jsonData": {

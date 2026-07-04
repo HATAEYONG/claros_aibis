@@ -1,19 +1,19 @@
 # ============================================================
-# NetPlus MIS-AI Dashboard AWS Lightsail 배포 스크립트 (PowerShell)
+# Claros MIS-AI Dashboard AWS Lightsail 배포 스크립트 (PowerShell)
 # 고정 IP: 52.79.230.126
 # ============================================================
 
 $SERVER_IP = "52.79.230.126"
 $SERVER_USER = "ubuntu"
 $KEY_PATH = "C:\Users\hty10\Downloads\LightsailDefaultKey-ap-northeast-2.pem"
-$PROJECT_DIR = "C:\work\claude_code\netplus-mis-ai-dashboard"
-$REMOTE_DIR = "/home/ubuntu/netplus-mis"
+$PROJECT_DIR = "C:\work\claude_code\claros-mis-ai-dashboard"
+$REMOTE_DIR = "/home/ubuntu/claros-mis"
 
 # SSH 옵션
 $sshOptions = "-i", $KEY_PATH, "-o", "StrictHostKeyChecking=no"
 
 Write-Host "=========================================="  -ForegroundColor Cyan
-Write-Host "  NetPlus MIS-AI Dashboard 배포"  -ForegroundColor Cyan
+Write-Host "  Claros MIS-AI Dashboard 배포"  -ForegroundColor Cyan
 Write-Host "  서버: $SERVER_IP"  -ForegroundColor Cyan
 Write-Host "=========================================="  -ForegroundColor Cyan
 
@@ -30,16 +30,16 @@ Write-Host "  - docker-compose.yml"  -ForegroundColor Gray
 if ($LASTEXITCODE -ne 0) { Write-Host "docker-compose.yml 업로드 실패!" -ForegroundColor Red }
 
 # Backend 업로드 (tar로 압축해서 전송)
-Write-Host "  - netplus-mis-backend/"  -ForegroundColor Gray
+Write-Host "  - claros-mis-backend/"  -ForegroundColor Gray
 $backendTar = "$env:TEMP\backend.tar"
-tar -cf "$env:TEMP\backend.tar" -C "$PROJECT_DIR" "netplus-mis-backend"
+tar -cf "$env:TEMP\backend.tar" -C "$PROJECT_DIR" "claros-mis-backend"
 & scp @sshOptions "$backendTar" "$SERVER_USER@${SERVER_IP}:/tmp/backend.tar"
 & ssh @sshOptions "$SERVER_USER@${SERVER_IP}" "cd $REMOTE_DIR && tar -xf /tmp/backend.tar && rm /tmp/backend.tar"
 
 # Frontend 업로드 (tar로 압축해서 전송)
-Write-Host "  - netplus-mis-frontend/"  -ForegroundColor Gray
+Write-Host "  - claros-mis-frontend/"  -ForegroundColor Gray
 $frontendTar = "$env:TEMP\frontend.tar"
-tar -cf "$env:TEMP\frontend.tar" -C "$PROJECT_DIR" "netplus-mis-frontend"
+tar -cf "$env:TEMP\frontend.tar" -C "$PROJECT_DIR" "claros-mis-frontend"
 & scp @sshOptions "$frontendTar" "$SERVER_USER@${SERVER_IP}:/tmp/frontend.tar"
 & ssh @sshOptions "$SERVER_USER@${SERVER_IP}" "cd $REMOTE_DIR && tar -xf /tmp/frontend.tar && rm /tmp/frontend.tar"
 

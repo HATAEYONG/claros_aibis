@@ -1,9 +1,9 @@
-# NetPlus MIS-AI Dashboard 기술문서 v2.0
+# Claros MIS-AI Dashboard 기술문서 v2.0
 
 ## 1. 시스템 개요
 
 ### 1.1 프로젝트 정보
-- **프로젝트명**: NetPlus MIS-AI Dashboard
+- **프로젝트명**: Claros MIS-AI Dashboard
 - **대상 기업**: 유한산업 (YH ERP)
 - **목적**: 이기종 ERP 연계 매핑 관리 시스템을 통한 경영정보 시각화 및 AI 기반 분석 제공
 - **아키텍처**: Django 5.0 Backend + React 18/TypeScript Frontend
@@ -376,7 +376,7 @@
       "source_type": "postgresql",
       "host": "localhost",
       "port": 5432,
-      "database": "emax_yuhan",
+      "database": "sap_yuhan",
       "is_default": true,
       "is_active": true
     }
@@ -528,7 +528,7 @@ source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate  # Windows
 
 # 2. 의존성 설치
-cd netplus-mis-backend
+cd claros-mis-backend
 pip install -r requirements.txt
 
 # 3. 환경 변수 설정
@@ -553,7 +553,7 @@ python manage.py runserver 0.0.0.0:8000
 
 ```bash
 # 1. 의존성 설치
-cd netplus-mis-frontend
+cd claros-mis-frontend
 npm install
 
 # 2. 환경 변수 설정
@@ -579,7 +579,7 @@ server {
 
     # Frontend
     location / {
-        root /var/www/netplus-mis-frontend/dist;
+        root /var/www/claros-mis-frontend/dist;
         try_files $uri $uri/ /index.html;
     }
 
@@ -609,7 +609,7 @@ server {
 
 ```bash
 # Backend 로그
-tail -f netplus-mis-backend/logs/django.log
+tail -f claros-mis-backend/logs/django.log
 
 # PostgreSQL 로그
 tail -f /var/log/postgresql/postgresql-15-main.log

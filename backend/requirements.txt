@@ -1,0 +1,125 @@
+# ============================================================================
+# Django Core
+# ============================================================================
+Django==5.0.0                   # Stable - Django 5.0 release
+djangorestframework==3.15.2     # Latest stable (Jan 2025)
+django-filter==24.3             # Latest (Nov 2024)
+django-cors-headers==4.6.0      # Latest (Jan 2025)
+
+# ============================================================================
+# Database Drivers
+# ============================================================================
+psycopg2-binary==2.9.9          # PostgreSQL adapter - Required for Django
+pyodbc==5.1.0                   # ODBC Driver for MS SQL Server (YH ERP 연동용)
+
+# ============================================================================
+# Authentication & Security
+# ============================================================================
+djangorestframework-simplejwt==5.4.0  # Latest (Jan 2025)
+PyJWT==2.9.0                     # Latest (Jan 2025)
+cryptography==44.0.0             # Latest (Feb 2025)
+
+# ============================================================================
+# API Documentation
+# ============================================================================
+drf-yasg==1.21.8                # Swagger/OpenAPI - Latest (Jan 2025)
+
+# ============================================================================
+# Data Processing
+# ============================================================================
+pandas==2.2.3                   # Latest (Jan 2025)
+numpy==2.1.0                    # Latest stable (NumPy 2.x)
+scipy==1.14.1                   # Latest (Jan 2025)
+
+# ============================================================================
+# Machine Learning & AI
+# ============================================================================
+scikit-learn==1.6.1             # Latest (Feb 2025)
+statsmodels==0.14.4             # Latest (Feb 2025)
+prophet==1.1.6                  # Time series forecasting - Latest (Jan 2025)
+xgboost==2.1.3                  # Latest (Feb 2025)
+lightgbm==4.5.0                 # Latest (Nov 2024)
+
+# ============================================================================
+# Task Queue & Scheduling
+# ============================================================================
+celery==5.4.0                   # Latest (Oct 2024)
+redis==5.2.1                    # Latest (Jan 2025)
+django-redis==5.4.0             # Stable
+apscheduler==3.11.0             # Latest (Feb 2025)
+
+# ============================================================================
+# Utilities
+# ============================================================================
+python-dotenv==1.0.1            # Latest (Jan 2025)
+requests==2.32.3                # Latest (Jan 2025)
+pytz==2024.2                    # Latest (Oct 2024)
+python-dateutil==2.9.0.post0    # Latest (Nov 2024)
+
+# ============================================================================
+# Data Visualization
+# ============================================================================
+matplotlib==3.10.0              # Latest (Feb 2025)
+seaborn==0.13.2                 # Latest (Oct 2024)
+
+# ============================================================================
+# Excel/CSV Processing
+# ============================================================================
+openpyxl==3.1.5                 # Latest (Feb 2025)
+xlsxwriter==3.2.0               # Latest (Dec 2024)
+
+# ============================================================================
+# Production Server
+# ============================================================================
+gunicorn==23.0.0                # Latest (Oct 2024)
+whitenoise==6.8.2               # Static files - Latest (Feb 2025)
+
+# ============================================================================
+# WebSocket / Real-time
+# ============================================================================
+channels==4.2.0                 # Latest (Feb 2025)
+channels-redis==4.2.1           # Latest (Oct 2024)
+daphne==4.1.2                   # ASGI server - Latest (Feb 2025)
+
+# ============================================================================
+# Celery Infrastructure
+# ============================================================================
+django-celery-beat==2.6.0       # Database-backed beat scheduler
+flower==2.0.1                   # Celery monitoring dashboard
+
+# ============================================================================
+# Structured Logging (ELK Stack)
+# ============================================================================
+python-json-logger==2.0.7       # JSON log formatter
+elastic-apm==6.20.0             # Optional APM integration
+
+# ============================================================================
+# Prometheus Metrics
+# ============================================================================
+prometheus-client==0.21.0       # Python client for Prometheus
+django-prometheus==2.3.1        # Django Prometheus integration
+
+# ============================================================================
+# Adaptive Batch Sizing
+# ============================================================================
+ping3==4.0.4                    # Network latency measurement
+
+# ============================================================================
+# Phase 1 Upgrade: LLM Integration
+# ============================================================================
+anthropic>=0.40.0               # Claude API client
+langchain>=0.3.0                # LangChain framework
+langchain-anthropic>=0.3.0      # LangChain Anthropic integration
+langchain-core>=0.3.0           # LangChain core
+langgraph>=1.1.0                # Multi-agent graph orchestration (SAP 업그레이드: Intent/Schema/SQL/Safety/Interpreter 파이프라인)
+tiktoken>=0.8.0                 # OpenAI tokenization (for embedding models)
+
+# ============================================================================
+# Phase 1 Upgrade: Vector Database
+# ============================================================================
+pgvector>=0.3.0                 # PostgreSQL vector extension (Python bindings)
+
+# ============================================================================
+# Additional AI/ML Utilities
+# %%
+sentence-transformers>=3.0.0    # Sentence embeddings for vector search

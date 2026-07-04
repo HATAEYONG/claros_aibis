@@ -1,21 +1,21 @@
 #!/bin/bash
 # ============================================================
-# NetPlus MIS-AI Dashboard 배포 스크립트
+# Claros MIS-AI Dashboard 배포 스크립트
 # AWS Lightsail Ubuntu 서버용
 # ============================================================
 
 set -e
 
 # 설정 변수
-PROJECT_NAME="netplus-mis"
+PROJECT_NAME="claros-mis"
 BACKEND_DIR="/var/www/$PROJECT_NAME/backend"
 FRONTEND_DIR="/var/www/$PROJECT_NAME/frontend"
 VENV_DIR="/var/www/$PROJECT_NAME/venv"
 LOG_DIR="/var/log/$PROJECT_NAME"
-SERVICE_NAME="netplus-mis"
+SERVICE_NAME="claros-mis"
 
 echo "=========================================="
-echo "  NetPlus MIS-AI Dashboard 배포 시작"
+echo "  Claros MIS-AI Dashboard 배포 시작"
 echo "=========================================="
 
 # ============================================================
@@ -50,10 +50,10 @@ sudo apt-get install -y \
 echo ""
 echo "[3/9] PostgreSQL 설정..."
 sudo -u postgres psql -c "DROP DATABASE IF EXISTS $PROJECT_NAME;" || true
-sudo -u postgres psql -c "DROP USER IF EXISTS netplus_user;" || true
-sudo -u postgres psql -c "CREATE USER netplus_user WITH PASSWORD 'netplus_password_2024';"
-sudo -u postgres psql -c "CREATE DATABASE $PROJECT_NAME OWNER netplus_user;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $PROJECT_NAME TO netplus_user;"
+sudo -u postgres psql -c "DROP USER IF EXISTS claros_user;" || true
+sudo -u postgres psql -c "CREATE USER claros_user WITH PASSWORD 'claros_password_2024';"
+sudo -u postgres psql -c "CREATE DATABASE $PROJECT_NAME OWNER claros_user;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $PROJECT_NAME TO claros_user;"
 
 # ============================================================
 # 4. 프로젝트 디렉토리 생성
@@ -75,7 +75,7 @@ python3 -m venv $VENV_DIR
 source $VENV_DIR/bin/activate
 
 # Backend 파일 복사 (실제 배포 시 git clone 또는 rsync 사용)
-cp -r /home/ubuntu/netplus-mis-backend/* $BACKEND_DIR/
+cp -r /home/ubuntu/claros-mis-backend/* $BACKEND_DIR/
 
 # 패키지 설치
 pip install --upgrade pip
@@ -83,7 +83,7 @@ pip install -r $BACKEND_DIR/requirements.txt
 
 # 환경변수 설정
 cp $BACKEND_DIR/.env.production $BACKEND_DIR/.env
-sed -i "s/your-db-password/netplus_password_2024/g" $BACKEND_DIR/.env
+sed -i "s/your-db-password/claros_password_2024/g" $BACKEND_DIR/.env
 sed -i "s/DEBUG=True/DEBUG=False/g" $BACKEND_DIR/.env
 
 # Django 마이그레이션
@@ -105,7 +105,7 @@ if ! command -v node &> /dev/null; then
 fi
 
 # Frontend 파일 복사 (실제 배포 시 git clone 또는 rsync 사용)
-cp -r /home/ubuntu/netplus-mis-frontend/* $FRONTEND_DIR/
+cp -r /home/ubuntu/claros-mis-frontend/* $FRONTEND_DIR/
 
 # npm 설치 및 빌드
 npm install
