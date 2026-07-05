@@ -580,65 +580,123 @@ def seed_integration_layer(depts, emps, equips, vendors, products, customers):
         IntegratedQualityRecord, IntegratedSalesOrder,
     )
 
-    product = products["P001"]  # 정밀부품 A
-    vendor = vendors["V001"]  # 대한정밀
-    customer = customers["C001"]  # 삼성전자
-    equipment = equips["EQ001"]  # 사출성형기 1호
-    sales_person = emps["E1003"]  # 박도윤 (영업대리)
-    production_supervisor = emps["E1002"]  # 이서연 (생산기사)
-    inspector = emps["E1005"]  # 정하은 (품질담당)
-
     today = date.today()
 
-    IntegratedMaterial.objects.get_or_create(
-        product=product, plant="본사공장", warehouse="제1창고",
-        defaults=dict(
-            quantity_on_hand=500, quantity_reserved=120, quantity_available=380, safety_stock=100,
-            moving_average_cost=8500, standard_cost=8200, total_value=4250000,
-            primary_vendor=vendor, lead_time_days=14,
-            last_receipt_date=today - timedelta(days=5), last_issue_date=today - timedelta(days=1),
-            turnover_rate=4.2, days_of_supply=45, is_abcs="A",
+    # 제품별로 서로 다른 상태의 체인을 만들어 다양한 케이스를 보여줌
+    scenarios = [
+        dict(
+            # P001: 진행 중, 경미한 품질 이슈(CAPA 진행 중)
+            product_key="P001", vendor_key="V001", customer_key="C001",
+            equipment_key="EQ001", sales_person_key="E1003",
+            production_supervisor_key="E1002", inspector_key="E1005",
+            so_number="SO-2026-0001", prod_number="PROD-2026-0001", qr_number="QR-2026-0001",
+            material=dict(quantity_on_hand=500, quantity_reserved=120, quantity_available=380, safety_stock=100,
+                          moving_average_cost=8500, standard_cost=8200, total_value=4250000, lead_time_days=14,
+                          turnover_rate=4.2, days_of_supply=45, is_abcs="A"),
+            sales_order=dict(customer_po="PO-SEC-2026-001", quantity_ordered=1000, quantity_shipped=600,
+                              quantity_invoiced=600, unit_price=12000, total_amount=12000000,
+                              status="in_production", progress=60),
+            production_order=dict(order_type="standard", quantity_ordered=1000, quantity_produced=650,
+                                   quantity_scrapped=8, status="in_progress", progress=65,
+                                   standard_cost=8200000, actual_cost=8450000),
+            quality_record=dict(record_type="final", lot_number="LOT-20260701-01", batch_number="B001",
+                                inspection_quantity=650, ok_quantity=642, ng_quantity=8, rework_quantity=0,
+                                result="conditional", defect_types=["치수불량"],
+                                defect_details="사출 온도 편차로 인한 치수불량 8건",
+                                capa_required=True, capa_number="CAPA-2026-0001", capa_status="in_progress"),
         ),
-    )
-
-    sales_order, _ = IntegratedSalesOrder.objects.get_or_create(
-        order_number="SO-2026-0001",
-        defaults=dict(
-            customer=customer, customer_po="PO-SEC-2026-001", product=product,
-            quantity_ordered=1000, quantity_shipped=600, quantity_invoiced=600,
-            unit_price=12000, total_amount=12000000,
-            order_date=today - timedelta(days=10), request_date=today + timedelta(days=5),
-            promise_date=today + timedelta(days=7), status="in_production", progress=60,
-            sales_person=sales_person,
+        dict(
+            # P002: 정상 완료 케이스 (수주 완료, 생산 완료, 품질 전량 합격)
+            product_key="P002", vendor_key="V002", customer_key="C002",
+            equipment_key="EQ002", sales_person_key="E1003",
+            production_supervisor_key="E1002", inspector_key="E1005",
+            so_number="SO-2026-0002", prod_number="PROD-2026-0002", qr_number="QR-2026-0002",
+            material=dict(quantity_on_hand=1200, quantity_reserved=0, quantity_available=1200, safety_stock=200,
+                          moving_average_cost=5200, standard_cost=5000, total_value=6240000, lead_time_days=10,
+                          turnover_rate=6.1, days_of_supply=60, is_abcs="B"),
+            sales_order=dict(customer_po="PO-LG-2026-014", quantity_ordered=2000, quantity_shipped=2000,
+                              quantity_invoiced=2000, unit_price=6500, total_amount=13000000,
+                              status="invoiced", progress=100),
+            production_order=dict(order_type="standard", quantity_ordered=2000, quantity_produced=2000,
+                                   quantity_scrapped=5, status="completed", progress=100,
+                                   standard_cost=10000000, actual_cost=9820000),
+            quality_record=dict(record_type="final", lot_number="LOT-20260628-03", batch_number="B014",
+                                inspection_quantity=2000, ok_quantity=1995, ng_quantity=5, rework_quantity=0,
+                                result="accepted", defect_types=[], defect_details="",
+                                capa_required=False, capa_number="", capa_status=""),
         ),
-    )
-
-    production_order, _ = IntegratedProductionOrder.objects.get_or_create(
-        order_number="PROD-2026-0001",
-        defaults=dict(
-            order_type="standard", product=product,
-            quantity_ordered=1000, quantity_produced=650, quantity_scrapped=8,
-            plant="본사공장", line="L1", equipment=equipment,
-            start_date_scheduled=today - timedelta(days=8), start_date_actual=today - timedelta(days=8),
-            end_date_scheduled=today + timedelta(days=2), status="in_progress", progress=65,
-            standard_cost=8200000, actual_cost=8450000, production_supervisor=production_supervisor,
+        dict(
+            # P003: 지연/문제 케이스 (생산 지연, 품질 불합격 다수, CAPA 필요)
+            product_key="P003", vendor_key="V002", customer_key="C003",
+            equipment_key="EQ003", sales_person_key="E1003",
+            production_supervisor_key="E1002", inspector_key="E1005",
+            so_number="SO-2026-0003", prod_number="PROD-2026-0003", qr_number="QR-2026-0003",
+            material=dict(quantity_on_hand=80, quantity_reserved=60, quantity_available=20, safety_stock=150,
+                          moving_average_cost=3100, standard_cost=3000, total_value=248000, lead_time_days=21,
+                          turnover_rate=1.8, days_of_supply=12, is_abcs="C", is_slow_moving=True),
+            sales_order=dict(customer_po="PO-HD-2026-007", quantity_ordered=1500, quantity_shipped=200,
+                              quantity_invoiced=0, unit_price=4200, total_amount=6300000,
+                              status="in_production", progress=15),
+            production_order=dict(order_type="rework", quantity_ordered=1500, quantity_produced=300,
+                                   quantity_scrapped=45, status="in_progress", progress=20,
+                                   standard_cost=4500000, actual_cost=1650000),
+            quality_record=dict(record_type="in_process", lot_number="LOT-20260703-02", batch_number="B007",
+                                inspection_quantity=300, ok_quantity=210, ng_quantity=90, rework_quantity=45,
+                                result="rejected", defect_types=["원자재 결함", "치수불량"],
+                                defect_details="원자재 자체 결함으로 90건 불합격, 재작업 45건 진행 중. 원자재 공급처 재검토 필요.",
+                                capa_required=True, capa_number="CAPA-2026-0003", capa_status="open"),
         ),
-    )
+    ]
 
-    IntegratedQualityRecord.objects.get_or_create(
-        record_number="QR-2026-0001",
-        defaults=dict(
-            record_type="final", product=product, lot_number="LOT-20260701-01", batch_number="B001",
-            inspection_quantity=650, ok_quantity=642, ng_quantity=8, rework_quantity=0,
-            result="conditional", defect_types=["치수불량"], defect_details="사출 온도 편차로 인한 치수불량 8건",
-            inspection_date=today - timedelta(days=1), inspector=inspector,
-            customer=customer, capa_required=True, capa_number="CAPA-2026-0001",
-            capa_due_date=today + timedelta(days=14), capa_status="in_progress",
-        ),
-    )
+    for sc in scenarios:
+        product = products[sc["product_key"]]
+        vendor = vendors[sc["vendor_key"]]
+        customer = customers[sc["customer_key"]]
+        equipment = equips[sc["equipment_key"]]
+        sales_person = emps[sc["sales_person_key"]]
+        production_supervisor = emps[sc["production_supervisor_key"]]
+        inspector = emps[sc["inspector_key"]]
 
-    log(f"integration_layer: SO={sales_order.order_number} -> PROD={production_order.order_number} "
-        f"(같은 product={product.product_code}/customer={customer.customer_code}로 연결)")
+        IntegratedMaterial.objects.get_or_create(
+            product=product, plant="본사공장", warehouse="제1창고",
+            defaults=dict(
+                primary_vendor=vendor,
+                last_receipt_date=today - timedelta(days=5), last_issue_date=today - timedelta(days=1),
+                **sc["material"],
+            ),
+        )
+
+        sales_order, _ = IntegratedSalesOrder.objects.get_or_create(
+            order_number=sc["so_number"],
+            defaults=dict(
+                customer=customer, product=product, currency="KRW",
+                order_date=today - timedelta(days=10), request_date=today + timedelta(days=5),
+                promise_date=today + timedelta(days=7), sales_person=sales_person,
+                **sc["sales_order"],
+            ),
+        )
+
+        production_order, _ = IntegratedProductionOrder.objects.get_or_create(
+            order_number=sc["prod_number"],
+            defaults=dict(
+                product=product, plant="본사공장", line="L1", equipment=equipment,
+                start_date_scheduled=today - timedelta(days=8), start_date_actual=today - timedelta(days=8),
+                end_date_scheduled=today + timedelta(days=2), production_supervisor=production_supervisor,
+                **sc["production_order"],
+            ),
+        )
+
+        IntegratedQualityRecord.objects.get_or_create(
+            record_number=sc["qr_number"],
+            defaults=dict(
+                product=product, inspection_date=today - timedelta(days=1), inspector=inspector,
+                customer=customer, capa_due_date=today + timedelta(days=14),
+                **sc["quality_record"],
+            ),
+        )
+
+        log(f"integration_layer: SO={sales_order.order_number} -> PROD={production_order.order_number} "
+            f"(product={product.product_code}/customer={customer.customer_code}, status={sc['sales_order']['status']})")
 
 
 # ============================================================
