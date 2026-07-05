@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-ERP 연결 관리 설정
+ERP 연결 관리 설정 (리팩토링: DB 모델 기반)
 
 ERP 데이터베이스 연결을 위한 설정 및 연결 관리 기능
+DB 모델(ERPConnectionConfigModel) 기반 동적 제어
 """
 import logging
 from django.conf import settings
@@ -13,9 +14,14 @@ logger = logging.getLogger(__name__)
 
 
 class ERPConnectionConfig:
-    """ERP 연결 설정 관리"""
+    """
+    ERP 연결 설정 관리 (리팩토링: DB 모델 래퍼)
 
-    # 연결 상태 추적
+    기존 정적 설정 방식을 DB 모델 기반으로 변경하되
+    하위 호환성을 위해 인터페이스는 유지
+    """
+
+    # 연결 상태 추적 (메모리 캐시)
     _connection_status: Dict[str, Dict[str, Any]] = {}
 
     # 연결 실패시 재시각하지 않을 시간 (초)
@@ -31,9 +37,26 @@ class ERPConnectionConfig:
     QUERY_TIMEOUT = 30
 
     @classmethod
+    def _get_db_config(cls, source_code: str):
+        """
+        DB 모델에서 설정 조회 (lazy loading)
+
+        Args:
+            source_code: ERP 소스 코드
+
+        Returns:
+            ERPConnectionConfigModel 인스턴스 또는 None
+        """
+        try:
+            from erp_sync.models import ERPConnectionConfigModel
+            return ERPConnectionConfigModel.objects.get(source_code=source_code)
+        except Exception:
+            return None
+
+    @classmethod
     def get_source_config(cls, source_code: str) -> Dict[str, Any]:
         """
-        ERP 소스별 설정 반환
+        ERP 소스별 설정 반환 (DB 모델 기반)
 
         Args:
             source_code: ERP 소스 코드
@@ -41,6 +64,24 @@ class ERPConnectionConfig:
         Returns:
             설정 딕셔너리
         """
+        # DB 모델에서 설정 조회 시도
+        db_config = cls._get_db_config(source_code)
+
+        if db_config:
+            return {
+                'host': db_config.host,
+                'port': db_config.port,
+                'database': db_config.database_name,
+                'user': db_config.username,
+                'connection_timeout': db_config.connection_timeout,
+                'query_timeout': db_config.query_timeout,
+                'enabled': db_config.is_enabled,
+                'fallback_to_mock': db_config.use_fallback,
+                'suppress_errors': db_config.suppress_errors,
+                'schema': db_config.schema_name,
+            }
+
+        # DB 설정이 없으면 기존 settings 기반 설정 반환 (하위 호환성)
         configs = {
             'YH': {
                 'host': getattr(settings, 'YH_DB_HOST', '133.186.214.219'),
@@ -49,9 +90,9 @@ class ERPConnectionConfig:
                 'user': 'yh',
                 'connection_timeout': cls.CONNECTION_TIMEOUT,
                 'query_timeout': cls.QUERY_TIMEOUT,
-                'enabled': True,  # 활성화 여부
-                'fallback_to_mock': True,  # 연결 실패시 모의 데이터 사용
-                'suppress_errors': True,  # 에러 로그 억제
+                'enabled': True,
+                'fallback_to_mock': True,
+                'suppress_errors': True,
             },
             'FOM': {
                 'host': getattr(settings, 'MSSQL_HOST', '133.186.214.219'),
@@ -66,7 +107,7 @@ class ERPConnectionConfig:
                 'host': getattr(settings, 'AXOS_DB_HOST', 'localhost'),
                 'port': getattr(settings, 'AXOS_DB_PORT', 1521),
                 'database': 'AXOS',
-                'enabled': False,  # 기본 비활성화
+                'enabled': False,
                 'fallback_to_mock': True,
                 'suppress_errors': True,
             },
@@ -81,7 +122,7 @@ class ERPConnectionConfig:
     @classmethod
     def can_attempt_connection(cls, source_code: str) -> bool:
         """
-        연결 시도 가능 여부 확인 (쿨다운 기간)
+        연결 시도 가능 여부 확인 (DB 모델 기반)
 
         Args:
             source_code: ERP 소스 코드
@@ -89,16 +130,21 @@ class ERPConnectionConfig:
         Returns:
             연결 시도 가능 여부
         """
+        # DB 모델 확인
+        db_config = cls._get_db_config(source_code)
+
+        if db_config:
+            return db_config.can_attempt_connection()
+
+        # DB 모델이 없으면 기존 로직 사용 (하위 호환성)
         if source_code not in cls._connection_status:
             return True
 
         status = cls._connection_status[source_code]
 
-        # 연결이 활성화되지 않은 경우
         if not status.get('enabled', True):
             return False
 
-        # 마지막 실패 후 쿨다운 기간이 지나지 않은 경우
         if 'last_failure' in status:
             last_failure = status['last_failure']
             cooldown_until = last_failure + timedelta(seconds=cls.CONNECTION_COOLDOWN)
@@ -110,7 +156,15 @@ class ERPConnectionConfig:
 
     @classmethod
     def record_connection_success(cls, source_code: str):
-        """연결 성공 기록"""
+        """연결 성공 기록 (DB 모델 기반)"""
+        # DB 모델 확인
+        db_config = cls._get_db_config(source_code)
+
+        if db_config:
+            db_config.record_connection_success()
+            return
+
+        # DB 모델이 없으면 기존 로직 사용 (하위 호환성)
         cls._connection_status[source_code] = {
             'enabled': True,
             'status': 'connected',
@@ -120,7 +174,15 @@ class ERPConnectionConfig:
 
     @classmethod
     def record_connection_failure(cls, source_code: str, error: Exception):
-        """연결 실패 기록"""
+        """연결 실패 기록 (DB 모델 기반)"""
+        # DB 모델 확인
+        db_config = cls._get_db_config(source_code)
+
+        if db_config:
+            db_config.record_connection_failure(str(error))
+            return
+
+        # DB 모델이 없으면 기존 로직 사용 (하위 호환성)
         if source_code not in cls._connection_status:
             cls._connection_status[source_code] = {
                 'enabled': True,
@@ -132,16 +194,24 @@ class ERPConnectionConfig:
         status['last_failure'] = datetime.now()
         status['last_error'] = str(error)
 
-        # 너무 많은 실패시 일시적으로 비활성화
         if status['failure_count'] >= cls.MAX_RETRY_ATTEMPTS:
             status['enabled'] = False
             logger.warning(f"[ERPConfig] {source_code} 연결이 {cls.MAX_RETRY_ATTEMPTS}회 실패하여 일시적으로 비활성화되었습니다.")
 
     @classmethod
     def get_connection_status(cls, source_code: str) -> Dict[str, Any]:
-        """연결 상태 반환"""
+        """연결 상태 반환 (DB 모델 기반)"""
         config = cls.get_source_config(source_code)
         status = cls._connection_status.get(source_code, {})
+
+        # DB 모델에서 추가 정보 가져오기
+        db_config = cls._get_db_config(source_code)
+        if db_config:
+            status.update({
+                'last_success': db_config.last_connection_success,
+                'last_failure': db_config.last_connection_attempt,
+                'failure_count': db_config.failure_count,
+            })
 
         return {
             'source_code': source_code,
@@ -156,7 +226,7 @@ class ERPConnectionConfig:
     @classmethod
     def should_use_fallback(cls, source_code: str) -> bool:
         """
-        폴백 데이터 사용 여부 확인
+        폴백 데이터 사용 여부 확인 (DB 모델 기반)
 
         Args:
             source_code: ERP 소스 코드
@@ -166,11 +236,9 @@ class ERPConnectionConfig:
         """
         config = cls.get_source_config(source_code)
 
-        # 연결 비활성화되거나 폴백 활성화된 경우
         if not config.get('enabled', True):
             return True
 
-        # 쿨다운 기간 중인 경우
         if not cls.can_attempt_connection(source_code):
             return True
 
@@ -188,14 +256,11 @@ class ERPConnectionConfig:
         """
         config = cls.get_source_config(source_code)
 
-        # 에러 억제 설정 확인
         should_suppress = suppress if suppress is not None else config.get('suppress_errors', True)
 
         if should_suppress:
-            # 에러 억제: DEBUG 레벨로만 기록
             logger.debug(f"[ERP] {source_code} 연결 에러 (억제됨): {str(error)}")
         else:
-            # 에러 출력
             logger.warning(f"[ERP] {source_code} 연결 실패: {str(error)}")
 
     @classmethod

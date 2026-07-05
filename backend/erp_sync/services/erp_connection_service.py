@@ -1,24 +1,98 @@
 """
 ERP 연결 서비스
 ERP 시스템 연결 및 테이블/필드 메타데이터 가져오기
+DB 모델 기반 동적 연결 제어 (ERPConnectionConfigModel)
 """
 
 import time
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class ERPConnectionService:
-    """ERP 연결 서비스"""
+    """ERP 연결 서비스 (DB 모델 기반)"""
 
-    def test_connection(self, erp_source) -> Dict[str, Any]:
+    def __init__(self):
+        self.config_model = None  # lazy loading
+
+    def _get_config_model(self):
+        """DB 설정 모델 import (lazy loading)"""
+        if self.config_model is None:
+            from erp_sync.models import ERPConnectionConfigModel
+            self.config_model = ERPConnectionConfigModel
+        return self.config_model
+
+    def get_connection_config(self, source_code: str) -> Optional['ERPConnectionConfigModel']:
         """
-        ERP 소스 연결 테스트
+        소스 코드로 연결 설정 조회
 
         Args:
-            erp_source: ERPSource 모델 인스턴스
+            source_code: ERP 소스 코드 (YH, FOM, LOCAL_BACKUP 등)
+
+        Returns:
+            ERPConnectionConfigModel 인스턴스 또는 None
+        """
+        ConfigModel = self._get_config_model()
+
+        try:
+            return ConfigModel.objects.get(source_code=source_code)
+        except ConfigModel.DoesNotExist:
+            logger.warning(f"Connection config not found for source: {source_code}")
+            return None
+
+    def is_connection_enabled(self, source_code: str) -> bool:
+        """
+        연결 활성화 여부 확인
+
+        Args:
+            source_code: ERP 소스 코드
+
+        Returns:
+            활성화 여부
+        """
+        config = self.get_connection_config(source_code)
+        if not config:
+            return False
+
+        # is_enabled 플래그 확인
+        if not config.is_enabled:
+            logger.info(f"Connection disabled for source: {source_code}")
+            return False
+
+        # 쿨다운 기간 확인
+        if not config.can_attempt_connection():
+            logger.info(f"Connection in cooldown period for source: {source_code}")
+            return False
+
+        return True
+
+    def get_fallback_source(self, source_code: str) -> Optional[str]:
+        """
+        폴백 소스 조회
+
+        Args:
+            source_code: ERP 소스 코드
+
+        Returns:
+            폴백 소스 코드 또는 None
+        """
+        config = self.get_connection_config(source_code)
+        if not config or not config.use_fallback:
+            return None
+
+        if config.fallback_source:
+            return config.fallback_source.source_code
+
+        return None
+
+    def test_connection(self, source_code: str) -> Dict[str, Any]:
+        """
+        ERP 소스 연결 테스트 (DB 모델 기반)
+
+        Args:
+            source_code: ERP 소스 코드
 
         Returns:
             연결 테스트 결과 딕셔너리
@@ -26,23 +100,52 @@ class ERPConnectionService:
         start_time = time.time()
 
         try:
-            if erp_source.source_type == 'postgresql':
-                return self._test_postgresql_connection(erp_source, start_time)
-            elif erp_source.source_type == 'mssql':
-                return self._test_mssql_connection(erp_source, start_time)
-            elif erp_source.source_type == 'mysql':
-                return self._test_mysql_connection(erp_source, start_time)
-            elif erp_source.source_type == 'sqlite':
-                return self._test_sqlite_connection(erp_source, start_time)
-            elif erp_source.source_type == 'api':
-                return self._test_api_connection(erp_source, start_time)
+            config = self.get_connection_config(source_code)
+
+            if not config:
+                return {
+                    'status': 'error',
+                    'message': f'설정을 찾을 수 없습니다: {source_code}',
+                    'error_code': 'CONFIG_NOT_FOUND'
+                }
+
+            # 연결 활성화 확인
+            if not self.is_connection_enabled(source_code):
+                return {
+                    'status': 'disabled',
+                    'message': '연결이 비활성화되었습니다',
+                    'config_enabled': config.is_enabled,
+                    'cooldown': not config.can_attempt_connection()
+                }
+
+            # 연결 시도 기록
+            config.record_connection_attempt()
+
+            # 소스 타입별 연결 테스트
+            if config.source_type == 'postgresql':
+                return self._test_postgresql_connection(config, start_time)
+            elif config.source_type == 'mssql':
+                return self._test_mssql_connection(config, start_time)
+            elif config.source_type == 'mysql':
+                return self._test_mysql_connection(config, start_time)
+            elif config.source_type == 'sqlite':
+                return self._test_sqlite_connection(config, start_time)
+            elif config.source_type == 'api':
+                return self._test_api_connection(config, start_time)
             else:
                 return {
                     'status': 'error',
-                    'message': f'지원하지 않는 소스 타입: {erp_source.source_type}'
+                    'message': f'지원하지 않는 소스 타입: {config.source_type}'
                 }
+
         except Exception as e:
-            logger.error(f"Connection test failed for {erp_source.source_code}: {str(e)}")
+            logger.error(f"Connection test failed for {source_code}: {str(e)}")
+
+            # 실패 기록
+            config = self.get_connection_config(source_code)
+            if config:
+                config.record_connection_failure(str(e))
+
             return {
                 'status': 'error',
                 'message': '연결 실패',
@@ -50,18 +153,19 @@ class ERPConnectionService:
                 'error_details': str(e)
             }
 
-    def _test_postgresql_connection(self, erp_source, start_time) -> Dict[str, Any]:
-        """PostgreSQL 연결 테스트"""
+    def _test_postgresql_connection(self, config, start_time) -> Dict[str, Any]:
+        """PostgreSQL 연결 테스트 (DB 모델 기반)"""
         try:
             import psycopg2
             import psycopg2.extras
 
             conn = psycopg2.connect(
-                host=erp_source.host,
-                port=erp_source.port or 5432,
-                database=erp_source.database_name,
-                user='postgres',  # 설정에서 가져오기
-                password=''  # 설정에서 가져오기
+                host=config.host,
+                port=config.port or 5432,
+                database=config.database_name,
+                user=config.username,
+                password=config.password,
+                connect_timeout=config.connection_timeout,
             )
 
             cursor = conn.cursor()
@@ -69,11 +173,14 @@ class ERPConnectionService:
             version = cursor.fetchone()[0]
 
             cursor.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = %s",
-                          [erp_source.schema_name or 'public'])
+                          [config.schema_name or 'public'])
             table_count = cursor.fetchone()[0]
 
             cursor.close()
             conn.close()
+
+            # 성공 기록
+            config.record_connection_success()
 
             latency_ms = int((time.time() - start_time) * 1000)
 
@@ -84,7 +191,7 @@ class ERPConnectionService:
                 'database_info': {
                     'version': version,
                     'table_count': table_count,
-                    'schema': erp_source.schema_name or 'public'
+                    'schema': config.schema_name or 'public'
                 }
             }
         except ImportError:
@@ -94,19 +201,21 @@ class ERPConnectionService:
                 'error_code': 'LIBRARY_NOT_FOUND'
             }
         except Exception as e:
+            config.record_connection_failure(str(e))
             raise
 
-    def _test_mssql_connection(self, erp_source, start_time) -> Dict[str, Any]:
-        """MS SQL Server 연결 테스트"""
+    def _test_mssql_connection(self, config, start_time) -> Dict[str, Any]:
+        """MS SQL Server 연결 테스트 (DB 모델 기반)"""
         try:
             import pyodbc
 
             conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};" \
-                      f"SERVER={erp_source.host},{erp_source.port or 1433};" \
-                      f"DATABASE={erp_source.database_name};" \
-                      f"Trusted_Connection=yes;"
+                      f"SERVER={config.host},{config.port or 1433};" \
+                      f"DATABASE={config.database_name};" \
+                      f"UID={config.username};" \
+                      f"PWD={config.password};"
 
-            conn = pyodbc.connect(conn_str)
+            conn = pyodbc.connect(conn_str, timeout=config.connection_timeout)
             cursor = conn.cursor()
             cursor.execute("SELECT @@VERSION")
             version = cursor.fetchone()[0]
@@ -116,6 +225,9 @@ class ERPConnectionService:
 
             cursor.close()
             conn.close()
+
+            # 성공 기록
+            config.record_connection_success()
 
             latency_ms = int((time.time() - start_time) * 1000)
 
@@ -135,19 +247,21 @@ class ERPConnectionService:
                 'error_code': 'LIBRARY_NOT_FOUND'
             }
         except Exception as e:
+            config.record_connection_failure(str(e))
             raise
 
-    def _test_mysql_connection(self, erp_source, start_time) -> Dict[str, Any]:
-        """MySQL 연결 테스트"""
+    def _test_mysql_connection(self, config, start_time) -> Dict[str, Any]:
+        """MySQL 연결 테스트 (DB 모델 기반)"""
         try:
             import pymysql
 
             conn = pymysql.connect(
-                host=erp_source.host,
-                port=erp_source.port or 3306,
-                database=erp_source.database_name,
-                user='root',
-                password=''
+                host=config.host,
+                port=config.port or 3306,
+                database=config.database_name,
+                user=config.username,
+                password=config.password,
+                connect_timeout=config.connection_timeout,
             )
 
             cursor = conn.cursor()
@@ -159,6 +273,9 @@ class ERPConnectionService:
 
             cursor.close()
             conn.close()
+
+            # 성공 기록
+            config.record_connection_success()
 
             latency_ms = int((time.time() - start_time) * 1000)
 
@@ -178,14 +295,15 @@ class ERPConnectionService:
                 'error_code': 'LIBRARY_NOT_FOUND'
             }
         except Exception as e:
+            config.record_connection_failure(str(e))
             raise
 
-    def _test_sqlite_connection(self, erp_source, start_time) -> Dict[str, Any]:
-        """SQLite 연결 테스트"""
+    def _test_sqlite_connection(self, config, start_time) -> Dict[str, Any]:
+        """SQLite 연결 테스트 (DB 모델 기반)"""
         try:
             import sqlite3
 
-            conn = sqlite3.connect(erp_source.database_name)
+            conn = sqlite3.connect(config.database_name)
             cursor = conn.cursor()
             cursor.execute("SELECT sqlite_version()")
             version = cursor.fetchone()[0]
@@ -195,6 +313,9 @@ class ERPConnectionService:
 
             cursor.close()
             conn.close()
+
+            # 성공 기록
+            config.record_connection_success()
 
             latency_ms = int((time.time() - start_time) * 1000)
 
@@ -208,26 +329,30 @@ class ERPConnectionService:
                 }
             }
         except Exception as e:
+            config.record_connection_failure(str(e))
             raise
 
-    def _test_api_connection(self, erp_source, start_time) -> Dict[str, Any]:
-        """REST API 연결 테스트"""
+    def _test_api_connection(self, config, start_time) -> Dict[str, Any]:
+        """REST API 연결 테스트 (DB 모델 기반)"""
         try:
             import requests
 
             headers = {}
-            if erp_source.api_key:
-                headers['Authorization'] = f'Bearer {erp_source.api_key}'
+            if config.password:  # API Key로 재사용
+                headers['Authorization'] = f'Bearer {config.password}'
 
             response = requests.get(
-                f"{erp_source.api_base_url}/health",
+                f"{config.host}/health",
                 headers=headers,
-                timeout=10
+                timeout=config.connection_timeout
             )
 
             latency_ms = int((time.time() - start_time) * 1000)
 
             if response.status_code == 200:
+                # 성공 기록
+                config.record_connection_success()
+
                 return {
                     'status': 'success',
                     'message': '연결 성공',
@@ -241,15 +366,16 @@ class ERPConnectionService:
                     'latency_ms': latency_ms
                 }
         except Exception as e:
+            config.record_connection_failure(str(e))
             raise
 
-    def import_table_definitions(self, erp_source, module_filter=None,
+    def import_table_definitions(self, source_code: str, module_filter=None,
                                   table_name_pattern='%', import_fields=True) -> Dict[str, Any]:
         """
-        테이블 정의 가져오기
+        테이블 정의 가져오기 (DB 모델 기반)
 
         Args:
-            erp_source: ERPSource 모델 인스턴스
+            source_code: ERP 소스 코드
             module_filter: 모듈 필터 목록
             table_name_pattern: 테이블명 패턴
             import_fields: 필드 정보 가져오기 여부
@@ -257,19 +383,40 @@ class ERPConnectionService:
         Returns:
             가져오기 결과 딕셔너리
         """
-        from erp_sync.models import ERPTableDefinition, ERPFieldDefinition
+        from erp_sync.models import ERPTableDefinition, ERPFieldDefinition, ERPSource
 
         try:
-            if erp_source.source_type == 'postgresql':
+            config = self.get_connection_config(source_code)
+
+            if not config:
+                return {
+                    'status': 'error',
+                    'message': f'설정을 찾을 수 없습니다: {source_code}'
+                }
+
+            # ERPSource 모델 인스턴스로 변환 (기존 코드 호환)
+            # 실제로는 ERPSource 모델을 사용하지 않고 config만 사용
+            erp_source = type('obj', (object,), {
+                'source_type': config.source_type,
+                'host': config.host,
+                'port': config.port,
+                'database_name': config.database_name,
+                'schema_name': config.schema_name,
+                'username': config.username,
+                'password': config.password,
+                'source_code': config.source_code,
+            })
+
+            if config.source_type == 'postgresql':
                 tables = self._get_postgresql_tables(erp_source, module_filter, table_name_pattern)
-            elif erp_source.source_type == 'mssql':
+            elif config.source_type == 'mssql':
                 tables = self._get_mssql_tables(erp_source, module_filter, table_name_pattern)
-            elif erp_source.source_type == 'sqlite':
+            elif config.source_type == 'sqlite':
                 tables = self._get_sqlite_tables(erp_source, module_filter, table_name_pattern)
             else:
                 return {
                     'status': 'error',
-                    'message': f'지원하지 않는 소스 타입: {erp_source.source_type}'
+                    'message': f'지원하지 않는 소스 타입: {config.source_type}'
                 }
 
             imported_tables = 0
@@ -340,8 +487,8 @@ class ERPConnectionService:
             host=erp_source.host,
             port=erp_source.port or 5432,
             database=erp_source.database_name,
-            user='postgres',
-            password=''
+            user=erp_source.username,
+            password=erp_source.password,
         )
         cursor = conn.cursor()
 
@@ -394,8 +541,8 @@ class ERPConnectionService:
             host=erp_source.host,
             port=erp_source.port or 5432,
             database=erp_source.database_name,
-            user='postgres',
-            password=''
+            user=erp_source.username,
+            password=erp_source.password,
         )
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -437,8 +584,8 @@ class ERPConnectionService:
             host=erp_source.host,
             port=erp_source.port or 5432,
             database=erp_source.database_name,
-            user='postgres',
-            password=''
+            user=erp_source.username,
+            password=erp_source.password,
         )
         cursor = conn.cursor()
 

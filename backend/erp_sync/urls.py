@@ -29,6 +29,9 @@ from .views import (
     ERPMappingImportViewSet,
 )
 
+# 연결 설정 관리 ViewSet (신규)
+from .views.connection_config_views import ERPConnectionConfigViewSet
+
 # 별도 뷰 함수 import
 from .service_config_views import enable_sample_service_view, generate_sample_data_view
 
@@ -62,6 +65,9 @@ router.register(r'config', ERPSyncConfigViewSet, basename='erp-sync-config')
 router.register(r'logs', ERPSyncLogViewSet, basename='erp-sync-log')
 router.register(r'mapping', ERPMappingViewSet, basename='erp-mapping')
 router.register(r'service-config', ERPSyncServiceConfigViewSet, basename='erp-sync-service-config')
+
+# 연결 설정 관리 라우팅 (신규)
+router.register(r'connection-config', ERPConnectionConfigViewSet, basename='erp-connection-config')
 
 # 신규 매핑 관리 라우팅
 router.register(r'sources', ERPSourceViewSet, basename='erp-source')

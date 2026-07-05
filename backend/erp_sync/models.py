@@ -1574,3 +1574,152 @@ class ERPMappingValidation(models.Model):
 
     def __str__(self):
         return f'{self.table_mapping.mapping_code} - {self.validation_type}: {self.status}'
+
+
+# ============================================================
+# ERP 연결 설정 DB 모델 (원격 DB on/off 제어)
+# ============================================================
+
+class ERPConnectionConfigModel(models.Model):
+    """
+    ERP 연결 설정 DB 모델
+    원격 DB 연결 on/off를 DB 레코드로 동적 제어
+    """
+
+    SOURCE_TYPE_CHOICES = [
+        ('postgresql', 'PostgreSQL'),
+        ('mssql', 'SQL Server'),
+        ('mysql', 'MySQL'),
+        ('sqlite', 'SQLite'),
+    ]
+
+    config_id = models.AutoField(primary_key=True)
+    source_code = models.CharField(
+        '소스 코드',
+        max_length=20,
+        unique=True,
+        help_text='YH, FOM, LOCAL 등 시스템 식별 코드'
+    )
+    source_name = models.CharField('소스명', max_length=100)
+    source_type = models.CharField(
+        '소스 타입',
+        max_length=20,
+        choices=SOURCE_TYPE_CHOICES,
+        default='postgresql'
+    )
+    description = models.TextField('설명', blank=True)
+
+    # 연결 정보
+    host = models.CharField('호스트', max_length=255, blank=True)
+    port = models.IntegerField('포트', null=True, blank=True)
+    database_name = models.CharField('데이터베이스', max_length=100, blank=True)
+    schema_name = models.CharField('스키마', max_length=100, blank=True)
+    username = models.CharField('사용자명', max_length=100, blank=True)
+    password = models.CharField('비밀번호', max_length=255, blank=True)
+
+    # 제어 플래그 (핵심)
+    is_enabled = models.BooleanField(
+        '활성화 여부',
+        default=True,
+        help_text='False인 경우 원격 연결 시도하지 않음'
+    )
+    use_fallback = models.BooleanField(
+        '폴백 사용',
+        default=True,
+        help_text='연결 실패 시 로컬 백업 DB 사용'
+    )
+
+    # 폴백 설정
+    fallback_source = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+        verbose_name='폴백 소스',
+        help_text='연결 실패 시 사용할 로컬 백업 DB 소스'
+    )
+
+    # 연결 타임아웃 설정
+    connection_timeout = models.IntegerField('연결 타임아웃(초)', default=10)
+    query_timeout = models.IntegerField('쿼리 타임아웃(초)', default=30)
+
+    # 재시도 설정
+    max_retry_attempts = models.IntegerField('최대 재시도 횟수', default=3)
+    cooldown_seconds = models.IntegerField('쿨다운(초)', default=300)
+
+    # 기타 설정
+    suppress_errors = models.BooleanField(
+        '에러 억제',
+        default=True,
+        help_text='True인 경우 연결 에러를 DEBUG 레벨로만 기록'
+    )
+
+    # 추적용
+    last_connection_attempt = models.DateTimeField('마지막 연결 시도', null=True, blank=True)
+    last_connection_success = models.DateTimeField('마지막 연결 성공', null=True, blank=True)
+    last_connection_error = models.TextField('마지막 연결 에러', blank=True)
+    failure_count = models.IntegerField('실패 횟수', default=0)
+
+    created_at = models.DateTimeField('생성일시', auto_now_add=True)
+    updated_at = models.DateTimeField('수정일시', auto_now=True)
+
+    class Meta:
+        db_table = 'erp_connection_config'
+        verbose_name = 'ERP 연결 설정'
+        verbose_name_plural = 'ERP 연결 설정'
+        ordering = ['source_code']
+
+    def __str__(self):
+        status = '활성' if self.is_enabled else '비활성'
+        return f'{self.source_code} - {self.source_name} ({status})'
+
+    def record_connection_attempt(self):
+        """연결 시도 기록"""
+        from django.utils import timezone
+        self.last_connection_attempt = timezone.now()
+        self.save(update_fields=['last_connection_attempt'])
+
+    def record_connection_success(self):
+        """연결 성공 기록"""
+        from django.utils import timezone
+        self.last_connection_success = timezone.now()
+        self.failure_count = 0
+        self.last_connection_error = ''
+        self.save(update_fields=['last_connection_success', 'failure_count', 'last_connection_error'])
+
+    def record_connection_failure(self, error_message):
+        """연결 실패 기록"""
+        from django.utils import timezone
+        self.last_connection_attempt = timezone.now()
+        self.failure_count = (self.failure_count or 0) + 1
+        self.last_connection_error = str(error_message)[:500]  # 제한
+        self.save(update_fields=['last_connection_attempt', 'failure_count', 'last_connection_error'])
+
+    def can_attempt_connection(self):
+        """연결 시도 가능 여부 (쿨다운 기간 확인)"""
+        if not self.is_enabled:
+            return False
+
+        if self.last_connection_attempt and self.cooldown_seconds > 0:
+            from django.utils import timezone
+            from datetime import timedelta
+            cooldown_until = self.last_connection_attempt + timedelta(seconds=self.cooldown_seconds)
+            if timezone.now() < cooldown_until:
+                return False
+
+        return True
+
+    @classmethod
+    def get_config(cls, source_code):
+        """소스 코드로 설정 조회 (없으면 생성)"""
+        config, created = cls.objects.get_or_create(
+            source_code=source_code,
+            defaults={
+                'source_name': f'{source_code} ERP',
+                'source_type': 'postgresql',
+                'is_enabled': True,
+                'use_fallback': True,
+            }
+        )
+        return config

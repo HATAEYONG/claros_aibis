@@ -251,7 +251,7 @@ import { WidgetProvider } from '@/context/WidgetContext';
 import { AnalysisResult, analyzeCausalRelation, isCausalAnalysisQuery, ONTOLOGY_CONCEPTS } from '@/services/causalAnalysisService';
 import { getActiveLLM, LLMProvider, sendMessage } from '@/services/llmService';
 import { generateSQL, getSchemaSummary, SQLGenerationResult } from '@/services/textToSqlService';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 
 // 챗 메시지 타입
@@ -413,8 +413,39 @@ const findMenuItem = (items: any[], id: string): any => {
   return null;
 };
 
+// 브라우저 주소창의 경로(/menuId)에서 초기 메뉴를 읽어온다 — 없으면 대시보드
+const getMenuIdFromLocation = () => {
+  const id = window.location.pathname.slice(1);
+  return id || 'dashboard';
+};
+
 const App: React.FC = () => {
-  const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [activeMenu, setActiveMenuState] = useState(getMenuIdFromLocation);
+  // setActiveMenu를 부르는 기존 ~150곳의 호출부는 그대로 두고, 이 wrapper가
+  // 상태 변경과 동시에 주소창 경로를 실제 메뉴 주소(/menuId)로 갱신한다.
+  const setActiveMenu = useCallback((id: string) => {
+    setActiveMenuState(id);
+    if (window.location.pathname.slice(1) !== id) {
+      window.history.pushState({ menuId: id }, '', `/${id}`);
+    }
+  }, []);
+
+  // 최초 진입 시 주소가 "/"이면 현재 메뉴 경로로 정리
+  useEffect(() => {
+    if (window.location.pathname === '/') {
+      window.history.replaceState({ menuId: activeMenu }, '', `/${activeMenu}`);
+    }
+  }, []);
+
+  // 뒤로가기/앞으로가기 시 주소창 경로에 맞춰 메뉴만 갱신(다시 push하지 않음)
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveMenuState(getMenuIdFromLocation());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
