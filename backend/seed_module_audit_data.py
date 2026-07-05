@@ -571,6 +571,77 @@ def seed_integrations():
 
 
 # ============================================================
+# 14b. 통합 레이어 (erp_sync.data_hub.integration) — O2C/P2P 프로세스가
+# 마스터 데이터를 통해 실제로 이어지도록 연결
+# ============================================================
+def seed_integration_layer(depts, emps, equips, vendors, products, customers):
+    from erp_sync.data_hub.integration.models import (
+        IntegratedMaterial, IntegratedProductionOrder,
+        IntegratedQualityRecord, IntegratedSalesOrder,
+    )
+
+    product = products["P001"]  # 정밀부품 A
+    vendor = vendors["V001"]  # 대한정밀
+    customer = customers["C001"]  # 삼성전자
+    equipment = equips["EQ001"]  # 사출성형기 1호
+    sales_person = emps["E1003"]  # 박도윤 (영업대리)
+    production_supervisor = emps["E1002"]  # 이서연 (생산기사)
+    inspector = emps["E1005"]  # 정하은 (품질담당)
+
+    today = date.today()
+
+    IntegratedMaterial.objects.get_or_create(
+        product=product, plant="본사공장", warehouse="제1창고",
+        defaults=dict(
+            quantity_on_hand=500, quantity_reserved=120, quantity_available=380, safety_stock=100,
+            moving_average_cost=8500, standard_cost=8200, total_value=4250000,
+            primary_vendor=vendor, lead_time_days=14,
+            last_receipt_date=today - timedelta(days=5), last_issue_date=today - timedelta(days=1),
+            turnover_rate=4.2, days_of_supply=45, is_abcs="A",
+        ),
+    )
+
+    sales_order, _ = IntegratedSalesOrder.objects.get_or_create(
+        order_number="SO-2026-0001",
+        defaults=dict(
+            customer=customer, customer_po="PO-SEC-2026-001", product=product,
+            quantity_ordered=1000, quantity_shipped=600, quantity_invoiced=600,
+            unit_price=12000, total_amount=12000000,
+            order_date=today - timedelta(days=10), request_date=today + timedelta(days=5),
+            promise_date=today + timedelta(days=7), status="in_production", progress=60,
+            sales_person=sales_person,
+        ),
+    )
+
+    production_order, _ = IntegratedProductionOrder.objects.get_or_create(
+        order_number="PROD-2026-0001",
+        defaults=dict(
+            order_type="standard", product=product,
+            quantity_ordered=1000, quantity_produced=650, quantity_scrapped=8,
+            plant="본사공장", line="L1", equipment=equipment,
+            start_date_scheduled=today - timedelta(days=8), start_date_actual=today - timedelta(days=8),
+            end_date_scheduled=today + timedelta(days=2), status="in_progress", progress=65,
+            standard_cost=8200000, actual_cost=8450000, production_supervisor=production_supervisor,
+        ),
+    )
+
+    IntegratedQualityRecord.objects.get_or_create(
+        record_number="QR-2026-0001",
+        defaults=dict(
+            record_type="final", product=product, lot_number="LOT-20260701-01", batch_number="B001",
+            inspection_quantity=650, ok_quantity=642, ng_quantity=8, rework_quantity=0,
+            result="conditional", defect_types=["치수불량"], defect_details="사출 온도 편차로 인한 치수불량 8건",
+            inspection_date=today - timedelta(days=1), inspector=inspector,
+            customer=customer, capa_required=True, capa_number="CAPA-2026-0001",
+            capa_due_date=today + timedelta(days=14), capa_status="in_progress",
+        ),
+    )
+
+    log(f"integration_layer: SO={sales_order.order_number} -> PROD={production_order.order_number} "
+        f"(같은 product={product.product_code}/customer={customer.customer_code}로 연결)")
+
+
+# ============================================================
 # 14. security
 # ============================================================
 def seed_security():
@@ -608,6 +679,7 @@ def main():
     seed_kpi_kri_facts(depts, products, vendors, customers)
     seed_ontology()
     seed_integrations()
+    seed_integration_layer(depts, emps, equips, vendors, products, customers)
     seed_security()
     log("=== 시딩 완료 ===")
 
