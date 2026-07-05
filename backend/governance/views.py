@@ -55,7 +55,7 @@ class PolicyRuleViewSet(viewsets.ModelViewSet):
                 Q(name_en__icontains=search)
             )
 
-        return queryset.select_related('violations').annotate(
+        return queryset.annotate(
             violation_count=Count('violations', filter=Q(violations__status='open'))
         )
 

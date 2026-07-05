@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from .models import ForecastModel, ForecastResult, ForecastAccuracyLog
+from .serializers import ForecastModelSerializer
 from .services.forecast_service import ForecastingService
 
 
@@ -16,6 +17,7 @@ class ForecastModelViewSet(viewsets.ModelViewSet):
     """예측 모델 관리 API"""
     permission_classes = [IsAuthenticated]
     queryset = ForecastModel.objects.all()
+    serializer_class = ForecastModelSerializer
 
     def get_queryset(self):
         return ForecastModel.objects.all().order_by('-created_at')

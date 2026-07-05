@@ -35,6 +35,11 @@ class EventViewSet(viewsets.ModelViewSet):
     ordering_fields = ["event_time", "created_at", "severity"]
     ordering = ["-event_time"]
 
+    def get_serializer_class(self):
+        # EventSerializer is defined later in this module (built after the
+        # DRF router already collected viewsets), so it's resolved lazily here.
+        return EventSerializer
+
     def get_queryset(self):
         """쿼리셋 커스터마이징"""
         queryset = super().get_queryset()

@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from .models import AnomalyDetector, AnomalyAlert, AnomalyPattern
+from .serializers import AnomalyDetectorSerializer, AnomalyAlertSerializer
 from .services.anomaly_service import AnomalyDetectionService
 
 
@@ -16,6 +17,7 @@ class AnomalyDetectorViewSet(viewsets.ModelViewSet):
     """이상탐지기 관리 API"""
     permission_classes = [IsAuthenticated]
     queryset = AnomalyDetector.objects.all()
+    serializer_class = AnomalyDetectorSerializer
 
     def get_queryset(self):
         return AnomalyDetector.objects.all().order_by('-created_at')
@@ -79,6 +81,7 @@ class AnomalyAlertViewSet(viewsets.ReadOnlyModelViewSet):
     """이상 알림 조회 API"""
     permission_classes = [IsAuthenticated]
     queryset = AnomalyAlert.objects.all()
+    serializer_class = AnomalyAlertSerializer
 
     def get_queryset(self):
         return AnomalyAlert.objects.all().order_by('-detected_at')
