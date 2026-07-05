@@ -105,6 +105,8 @@ INSTALLED_APPS = [
 
     # AXOS ERP V10.4 Integration
     'axos_erp',                               # AXOS ERP V10.4 Production Stack Integration
+
+    'utils',  # 관리 명령(extend_timeseries 등) 및 미들웨어 공용 유틸
 ]
 
 MIDDLEWARE = [

@@ -21,6 +21,38 @@ from erp_sync.erp_connection_config import ERPConnectionConfig
 logger = logging.getLogger(__name__)
 
 
+def _closest_fy_fm_queryset(queryset, year, month):
+    """
+    요청한 (year, month)와 정확히 일치하는 행을 우선 찾고, 없으면 시간축이 가장 가까운
+    행을 찾는다. 원격 YH DB가 과거 백업이라 "오늘" 요청이 그대로 안 맞을 수 있으므로,
+    로컬에 증강된 시계열 중 가장 근접한 시점으로 자연스럽게 대체한다.
+    """
+    exact = queryset.filter(fiscal_year=year, fiscal_month=month)
+    if exact.exists():
+        return exact
+    target_index = year * 12 + month
+    best = None
+    best_diff = None
+    for row in queryset:
+        idx = row.fiscal_year * 12 + row.fiscal_month
+        diff = abs(idx - target_index)
+        if best_diff is None or diff < best_diff:
+            best, best_diff = row, diff
+    return [best] if best else []
+
+
+def _closest_date_queryset(queryset, target_date, date_field="production_date"):
+    """단일 date 필드를 쓰는 모델에서 target_date와 가장 가까운 날짜의 행들을 반환"""
+    exact = queryset.filter(**{date_field: target_date})
+    if exact.exists():
+        return exact
+    all_dates = sorted(set(queryset.values_list(date_field, flat=True)))
+    if not all_dates:
+        return queryset.none()
+    closest = min(all_dates, key=lambda d: abs((d - target_date).days))
+    return queryset.filter(**{date_field: closest})
+
+
 class DataSyncService:
     """ERP 데이터 동기화 서비스"""
 
@@ -162,43 +194,42 @@ class DashboardDataService:
         경영진단 요약 대시보드 데이터 조회
 
         GET /api/dashboard/executive-summary/
+
+        YH 원격 DB(과거 백업, 읽기 전용, 현재 접속 불가)에는 더 이상 의존하지 않는다.
+        로컬에 증강 생성된 reports.ExecutiveSummary 시계열에서 조회한다.
         """
+        from reports.models import ExecutiveSummary
+
         try:
-            erp_source = DataSyncService.get_default_source()
-            if not erp_source:
-                return Response({
-                    'error': 'ERP 소스를 찾을 수 없습니다.'
-                }, status=404)
-
-            # 기간 파라미터
             period_type = request.GET.get('period_type', 'monthly')
-            period_value = request.GET.get('period_value', '2024-12')
+            period_value = request.GET.get('period_value', datetime.now().strftime('%Y-%m'))
+            year, month = int(period_value.split('-')[0]), int(period_value.split('-')[1])
 
-            # 임시 데이터 (실제 구현 시 ERP 조회)
+            rows = _closest_fy_fm_queryset(ExecutiveSummary.objects.all(), year, month)
+            row = rows[0] if rows else None
+
+            if row is None:
+                return Response({'error': '경영진단 요약 데이터가 없습니다.'}, status=404)
+
             data = {
                 'period_type': period_type,
-                'period_value': period_value,
-                'total_sales': 156000000,  # 156억
-                'total_profit': 28000000,   # 28억
-                'profit_margin': 17.9,
-                'total_orders': 1250,
+                'period_value': f"{row.fiscal_year}-{row.fiscal_month:02d}",
+                'total_sales': int(row.revenue * 100_000_000),
+                'total_profit': int(row.operating_profit * 100_000_000),
+                'profit_margin': float(row.operating_margin),
+                'total_orders': row.production_volume,
                 'production_rate': 94.5,
-                'quality_rate': 98.2,
+                'quality_rate': float(row.quality_rate),
                 'inventory_turnover': 4.2,
-                'employee_count': 850,
+                'employee_count': row.employee_count,
                 'safety_incidents': 0,
-                'source_tables': [
-                    'SDY100_YH',
-                    'PPB120_YH',
-                    'QMM140_YH',
-                    'LEB950_YH',
-                    'MMA200_YH'
-                ]
+                'data_source': 'local_augmented',
             }
 
             return Response({'results': [data]})
 
         except Exception as e:
+            logger.error(f"[Dashboard] Executive summary error: {str(e)}", exc_info=True)
             return Response({
                 'error': f'데이터 조회 실패: {str(e)}'
             }, status=500)
@@ -215,84 +246,38 @@ class DashboardDataService:
         Query Parameters:
             date: 조회 일자 (YYYY-MM-DD)
         """
+        from sales.models import MonthlySales, TopCustomer
+
         try:
-            date = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
-            erp_source = DataSyncService.get_default_source()
+            date_str = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
+            year, month = int(date_str[:4]), int(date_str[5:7])
 
-            data = None
-            source_tables = []
+            rows = _closest_fy_fm_queryset(MonthlySales.objects.all(), year, month)
+            monthly = rows[0] if rows else None
 
-            if erp_source:
-                try:
-                    # 실제 ERP 데이터 조회 시도
-                    # SDY100_YH: 년제품판매계획정보
-                    sales_data = DataSyncService.fetch_from_erp(
-                        erp_source,
-                        'SDY100_YH',
-                        where_clause=f"plan_mon = {int(date.split('-')[1])}",
-                        limit=100
-                    )
+            if monthly is None:
+                return Response({'error': '영업 데이터가 없습니다.'}, status=404)
 
-                    if sales_data:
-                        # ERP 데이터 집계
-                        total_sales = sum(float(row.get('plan_amt', 0) or 0) for row in sales_data)
-                        total_orders = len(sales_data)
+            top_rows = _closest_fy_fm_queryset(TopCustomer.objects.all(), monthly.fiscal_year, monthly.fiscal_month)
+            top_customers = [
+                {'name': r.customer_name, 'amount': int(r.revenue)}
+                for r in sorted(top_rows, key=lambda r: r.revenue, reverse=True)[:5]
+            ]
 
-                        # 거래처별 집계
-                        customer_sales = {}
-                        for row in sales_data:
-                            cust_nm = row.get('cust_nm', '미분류')
-                            amt = float(row.get('plan_amt', 0) or 0)
-                            customer_sales[cust_nm] = customer_sales.get(cust_nm, 0) + amt
-
-                        top_customers = [
-                            {'name': name, 'amount': int(amount)}
-                            for name, amount in sorted(customer_sales.items(), key=lambda x: x[1], reverse=True)[:5]
-                        ]
-
-                        data = {
-                            'date': date,
-                            'daily_sales': int(total_sales / 30),  # 일별 추정
-                            'monthly_sales': int(total_sales),
-                            'order_count': total_orders,
-                            'delivery_count': int(total_orders * 0.93),  # 93% 납품률 가정
-                            'pending_orders': int(total_orders * 0.07),
-                            'top_customers': top_customers,
-                            'top_products': [],
-                            'vs_last_year': 8.5,
-                            'vs_target': 102.3,
-                            'source_tables': ['SDY100_YH', 'SDA500_YH', 'SDA510_YH']
-                        }
-                        logger.info(f"[Dashboard] Loaded real ERP data for sales dashboard: {len(sales_data)} records")
-
-                except Exception as e:
-                    # 에러는 이미 fetch_from_erp에서 처리됨
-                    pass
-
-            # 폴백 데이터 (ERP 연결 실패 또는 데이터 없음)
-            if data is None:
-                logger.info("[Dashboard] Using fallback mock data for sales dashboard")
-                data = {
-                    'date': date,
-                    'daily_sales': 520000000,  # 52억
-                    'monthly_sales': 15600000000,  # 1,560억
-                    'order_count': 45,
-                    'delivery_count': 42,
-                    'pending_orders': 15,
-                    'top_customers': [
-                        {'name': '삼성전자', 'amount': 4500000000},
-                        {'name': 'LG전자', 'amount': 3200000000},
-                        {'name': 'SK하이닉스', 'amount': 2800000000}
-                    ],
-                    'top_products': [
-                        {'name': '리튬 배터리', 'amount': 8500000000},
-                        {'name': 'OLED 패널', 'amount': 6200000000}
-                    ],
-                    'vs_last_year': 8.5,
-                    'vs_target': 102.3,
-                    'source_tables': ['SDY100_YH', 'SDA500_YH', 'SDA510_YH'],
-                    'data_source': 'fallback'  # 데이터 출처 표시
-                }
+            monthly_amount = float(monthly.actual_amount)
+            data = {
+                'date': date_str,
+                'daily_sales': int(monthly_amount / 30),
+                'monthly_sales': int(monthly_amount),
+                'order_count': monthly.new_customers * 3 + 20,
+                'delivery_count': int((monthly.new_customers * 3 + 20) * 0.93),
+                'pending_orders': int((monthly.new_customers * 3 + 20) * 0.07),
+                'top_customers': top_customers,
+                'top_products': [],
+                'vs_last_year': 8.5,
+                'vs_target': float(monthly.achievement_rate),
+                'data_source': 'local_augmented',
+            }
 
             return Response({'results': [data]})
 
@@ -315,78 +300,53 @@ class DashboardDataService:
             date: 조회 일자 (YYYY-MM-DD)
             factory_code: 공장 코드
         """
+        from production.models import DailyProduction
+
         try:
-            date = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
+            date_str = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
             factory_code = request.GET.get('factory_code', 'FAC01')
-            erp_source = DataSyncService.get_default_source()
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-            data = None
+            rows = list(_closest_date_queryset(
+                DailyProduction.objects.select_related('production_line').all(),
+                target_date, date_field='production_date'
+            ))
 
-            if erp_source:
-                try:
-                    # PPB120_YH: 생산실적집계 (예시 테이블)
-                    production_data = DataSyncService.fetch_from_erp(
-                        erp_source,
-                        'PPB120_YH',
-                        limit=100
-                    )
+            if not rows:
+                return Response({'error': '생산 데이터가 없습니다.'}, status=404)
 
-                    if production_data:
-                        # 생산 데이터 집계
-                        total_plan = sum(float(row.get('plan_qty', 0) or 0) for row in production_data)
-                        total_actual = sum(float(row.get('prod_qty', 0) or 0) for row in production_data)
-                        total_good = sum(float(row.get('good_qty', 0) or 0) for row in production_data)
-                        total_defect = sum(float(row.get('defect_qty', 0) or 0) for row in production_data)
+            total_plan = sum(r.target_quantity for r in rows)
+            total_actual = sum(r.actual_quantity for r in rows)
+            total_defect = sum(r.defect_quantity for r in rows)
+            total_good = total_actual - total_defect
+            total_downtime = sum(float(r.downtime_hours) for r in rows)
 
-                        yield_rate = (total_good / total_actual * 100) if total_actual > 0 else 0
-                        achievement_rate = (total_actual / total_plan * 100) if total_plan > 0 else 0
+            yield_rate = (total_good / total_actual * 100) if total_actual > 0 else 0
+            achievement_rate = (total_actual / total_plan * 100) if total_plan > 0 else 0
 
-                        data = {
-                            'date': date,
-                            'factory_code': factory_code,
-                            'plan_qty': int(total_plan),
-                            'production_qty': int(total_actual),
-                            'good_qty': int(total_good),
-                            'defect_qty': int(total_defect),
-                            'yield_rate': round(yield_rate, 1),
-                            'achievement_rate': round(achievement_rate, 1),
-                            'oee_rate': 87.2,
-                            'downtime_minutes': 120,
-                            'manpower_count': 45,
-                            'lines': [
-                                {'code': 'LINE01', 'achievement': 95.2},
-                                {'code': 'LINE02', 'achievement': 93.8}
-                            ],
-                            'source_tables': ['PPB120_YH', 'PPB125_YH', 'MESTagValue_YH']
-                        }
-                        logger.info(f"[Dashboard] Loaded real ERP data for production dashboard: {len(production_data)} records")
-
-                except Exception as e:
-                    # 에러는 이미 fetch_from_erp에서 처리됨
-                    pass
-
-            # 폴백 데이터
-            if data is None:
-                logger.info("[Dashboard] Using fallback mock data for production dashboard")
-                data = {
-                    'date': date,
-                    'factory_code': factory_code,
-                    'plan_qty': 50000,
-                    'production_qty': 47250,
-                    'good_qty': 46300,
-                    'defect_qty': 950,
-                    'yield_rate': 98.0,
-                    'achievement_rate': 94.5,
-                    'oee_rate': 87.2,
-                    'downtime_minutes': 120,
-                    'manpower_count': 45,
-                    'lines': [
-                        {'code': 'LINE01', 'achievement': 95.2},
-                        {'code': 'LINE02', 'achievement': 93.8}
-                    ],
-                    'source_tables': ['PPB120_YH', 'PPB125_YH', 'MESTagValue_YH'],
-                    'data_source': 'fallback'
+            lines = [
+                {
+                    'code': r.production_line.code,
+                    'achievement': round((r.actual_quantity / r.target_quantity * 100) if r.target_quantity else 0, 1),
                 }
+                for r in rows
+            ]
+
+            data = {
+                'date': date_str,
+                'factory_code': factory_code,
+                'plan_qty': int(total_plan),
+                'production_qty': int(total_actual),
+                'good_qty': int(total_good),
+                'defect_qty': int(total_defect),
+                'yield_rate': round(yield_rate, 1),
+                'achievement_rate': round(achievement_rate, 1),
+                'oee_rate': round(yield_rate * achievement_rate / 100, 1) if achievement_rate else 0,
+                'downtime_minutes': int(total_downtime * 60),
+                'manpower_count': 45,
+                'lines': lines,
+                'data_source': 'local_augmented',
+            }
 
             return Response({'results': [data]})
 
@@ -405,34 +365,67 @@ class DashboardDataService:
 
         GET /api/dashboard/quality/
         """
+        from quality.models import QualityInspection
+
         try:
-            date = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
+            date_str = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+            rows = list(_closest_date_queryset(
+                QualityInspection.objects.all(), target_date, date_field='inspection_date'
+            ))
+
+            if not rows:
+                return Response({'error': '품질 검사 데이터가 없습니다.'}, status=404)
+
+            inspect_count = sum(r.sample_size for r in rows)
+            defect_count = sum(r.defect_count for r in rows)
+            fail_count = sum(1 for r in rows if r.result != 'pass')
+            pass_count = len(rows) - fail_count
+
+            defect_by_type = {}
+            for r in rows:
+                if r.defect_count > 0:
+                    defect_by_type[r.inspection_type] = defect_by_type.get(r.inspection_type, 0) + r.defect_count
+            top_defects = [
+                {'type': t, 'count': c}
+                for t, c in sorted(defect_by_type.items(), key=lambda x: x[1], reverse=True)[:5]
+            ]
+
+            inspector_stats = {}
+            for r in rows:
+                stat = inspector_stats.setdefault(r.inspector, {'inspections': 0, 'pass': 0})
+                stat['inspections'] += 1
+                if r.result == 'pass':
+                    stat['pass'] += 1
+            inspector_performance = [
+                {
+                    'inspector': name,
+                    'inspections': s['inspections'],
+                    'pass_rate': round(s['pass'] / s['inspections'] * 100, 1) if s['inspections'] else 0,
+                }
+                for name, s in inspector_stats.items()
+            ]
 
             data = {
-                'date': date,
-                'inspect_count': 1250,
-                'pass_count': 1228,
-                'fail_count': 22,
-                'pass_rate': 98.24,
-                'defect_rate': 1.76,
-                'rework_count': 8,
-                'customer_claim_count': 2,
-                'top_defects': [
-                    {'type': '치수불량', 'count': 8},
-                    {'type': '외관불량', 'count': 6},
-                    {'type': '치수불량', 'count': 4}
-                ],
-                'inspector_performance': [
-                    {'inspector': '홍길동', 'inspections': 420, 'pass_rate': 98.8},
-                    {'inspector': '김철수', 'inspections': 380, 'pass_rate': 97.6}
-                ],
-                'claim_cost': 15000000,
-                'source_tables': ['QMM140_YH', 'QMM200_YH', 'QMM210_YH']
+                'date': date_str,
+                'inspect_count': inspect_count,
+                'pass_count': pass_count,
+                'fail_count': fail_count,
+                'pass_rate': round(pass_count / len(rows) * 100, 2) if rows else 0,
+                'defect_rate': round(defect_count / inspect_count * 100, 2) if inspect_count else 0,
+                'rework_count': fail_count,
+                'customer_claim_count': max(0, fail_count // 5),
+                'top_defects': top_defects,
+                'inspector_performance': inspector_performance,
+                'claim_cost': fail_count * 700000,
+                'data_source': 'local_augmented',
             }
 
             return Response({'results': [data]})
 
         except Exception as e:
+            logger.error(f"[Dashboard] Quality dashboard error: {str(e)}", exc_info=True)
             return Response({
                 'error': f'데이터 조회 실패: {str(e)}'
             }, status=500)
@@ -445,31 +438,47 @@ class DashboardDataService:
         재고 관리 대시보드 데이터 조회
 
         GET /api/dashboard/inventory/
+
+        재고 마스터는 시계열이 아니라 현재 스냅샷 성격이라 asof_date와 무관하게
+        로컬 purchase.Inventory 현황을 그대로 집계한다.
         """
+        from purchase.models import Inventory
+
         try:
             asof_date = request.GET.get('asof_date', datetime.now().strftime('%Y-%m-%d'))
 
+            items = list(Inventory.objects.all())
+            if not items:
+                return Response({'error': '재고 데이터가 없습니다.'}, status=404)
+
+            total_stock_value = sum(float(i.stock_value) for i in items)
+            by_category = {}
+            for i in items:
+                by_category[i.category] = by_category.get(i.category, 0) + float(i.stock_value)
+
             data = {
                 'asof_date': asof_date,
-                'total_items': 3520,
-                'total_stock_qty': 125000,
-                'total_stock_value': 45000000000,  # 450억
-                'overstock_items': 125,
-                'stockout_items': 18,
-                'slow_moving_items': 89,
-                'avg_stock_days': 45,
-                'incoming_count': 45,
-                'outgoing_count': 120,
+                'total_items': len(items),
+                'total_stock_qty': sum(i.current_stock for i in items),
+                'total_stock_value': int(total_stock_value),
+                'overstock_items': sum(1 for i in items if i.status == 'high'),
+                'stockout_items': sum(1 for i in items if i.status == 'critical'),
+                'slow_moving_items': sum(1 for i in items if i.status == 'low'),
+                'avg_stock_days': round(
+                    sum(float(i.turnover_rate) for i in items) / len(items), 1
+                ) if items else 0,
+                'incoming_count': 0,
+                'outgoing_count': 0,
                 'warehouses': [
-                    {'code': 'WH01', 'value': 25000000000},
-                    {'code': 'WH02', 'value': 20000000000}
+                    {'code': cat, 'value': int(val)} for cat, val in by_category.items()
                 ],
-                'source_tables': ['LEB950_YH', 'LEB980_YH']
+                'data_source': 'local_augmented',
             }
 
             return Response({'results': [data]})
 
         except Exception as e:
+            logger.error(f"[Dashboard] Inventory dashboard error: {str(e)}", exc_info=True)
             return Response({
                 'error': f'데이터 조회 실패: {str(e)}'
             }, status=500)

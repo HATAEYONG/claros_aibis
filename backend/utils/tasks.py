@@ -315,6 +315,33 @@ def archive_data_task(months_old: int = 6):
 
 
 @shared_task(
+    name='claros_mis.utils.tasks.extend_timeseries_task',
+    queue='low',
+    priority=3,
+    max_retries=1
+)
+def extend_timeseries_task():
+    """
+    YH 원격 DB(과거 백업, 조회 불가) 의존을 없애기 위해 로컬 시계열 테이블들을
+    오늘(+버퍼)까지 자동 연장 생성한다.
+    Runs daily.
+    """
+    from django.core.management import call_command
+
+    try:
+        logger.info("Starting timeseries extension")
+        call_command('extend_timeseries')
+        logger.info("Timeseries extension completed")
+        return {
+            'status': 'completed',
+            'timestamp': datetime.now().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Timeseries extension failed: {e}")
+        raise extend_timeseries_task.retry(exc=e, countdown=3600)
+
+
+@shared_task(
     name='claros_mis.utils.tasks.update_metrics_task',
     queue='medium',
     priority=5

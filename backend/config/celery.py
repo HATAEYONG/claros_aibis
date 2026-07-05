@@ -121,6 +121,11 @@ app.conf.beat_schedule = {
         'schedule': crontab(minute='*/5'),
         'options': {'queue': 'high'},
     },
+    'extend-timeseries-daily': {
+        'task': 'claros_mis.utils.tasks.extend_timeseries_task',
+        'schedule': crontab(hour=1, minute=0),
+        'options': {'queue': 'low'},
+    },
 }
 
 
