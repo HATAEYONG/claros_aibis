@@ -48,7 +48,7 @@ import QualityCost from '@/components/dashboard/QualityCost';
 import Reports from '@/components/dashboard/Reports';
 import { CostBreakdown, CostDriverAnalysis } from '@/components/cost';
 // Business Process (named imports are kept non-lazy for compatibility)
-import { O2CView, P2PView, ProcessFlowChart } from '@/components/business-process';
+import { O2CView, P2PView, ProcessFlowChart, ProcessChainView } from '@/components/business-process';
 const Sales = lazy(() => import('@/components/dashboard/Sales'));
 const SalesCost = lazy(() => import('@/components/dashboard/SalesCost'));
 const ScenarioAnalysis = lazy(() => import('@/components/dashboard/ScenarioAnalysis'));
@@ -606,6 +606,7 @@ const App: React.FC = () => {
         { id: 'o2cView', icon: ShoppingCartIcon, label: 'Order to Cash (O2C)' },
         { id: 'p2pView', icon: ShoppingCartIcon, label: 'Procure to Pay (P2P)' },
         { id: 'processFlowChart', icon: ActivityIcon, label: '프로세스 플로우' },
+        { id: 'processChainView', icon: PackageIcon, label: '프로세스 연관성 추적' },
       ]
     },
     // AI 에이전트
@@ -1082,6 +1083,9 @@ const renderContent = () => {
   }
   if (activeMenu === 'processFlowChart') {
     return <ProcessFlowChart />;
+  }
+  if (activeMenu === 'processChainView') {
+    return <ProcessChainView />;
   }
   if (activeMenu === 'fourM2EStrategy') {
     return <FourM2EStrategy />;

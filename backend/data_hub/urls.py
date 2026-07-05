@@ -20,4 +20,5 @@ urlpatterns = [
     # ERP Sync Data Hub Routes
     path('master/', include('erp_sync.data_hub.master.urls')),
     path('analytics/', include('erp_sync.data_hub.analytics.urls')),
+    path('integration/', include('erp_sync.data_hub.integration.urls')),
 ]
