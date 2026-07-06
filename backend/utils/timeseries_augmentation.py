@@ -36,6 +36,10 @@ MIN_HISTORY_PER_GROUP = 3
 # 모델당 확장할 그룹 수 상한(과도한 dimension 조합 폭증 방지, 데이터 풍부한 그룹 우선)
 MAX_GROUPS_PER_MODEL = 60
 
+# 선형 추세를 그대로 곱해서 반영할 최대 스텝 수. 이보다 먼 미래는 추세 기여가
+# 더 커지지 않도록 포화시켜, 장기 추정이 0(또는 무한)으로 발산하지 않게 한다.
+TREND_SATURATION_STEPS = 6
+
 
 def _is_fy_fm_model(model):
     field_names = {f.name for f in model._meta.get_fields() if hasattr(f, "get_internal_type")}
@@ -153,7 +157,11 @@ def _project_value(history, steps_ahead, field_name):
         slope = 0
 
     last_value = values[-1]
-    projected = last_value + slope * steps_ahead
+    # 선형 추세를 steps_ahead에 그대로 곱하면 지평이 길어질수록(오늘까지 갭이 클수록)
+    # 발산해서 0으로 수렴해버릴 수 있다(한 번 0으로 클램프되면 이후 스텝도 계속 0).
+    # 추세 기여분은 최대 TREND_SATURATION_STEPS 스텝만큼만 반영해 장기 추정을 완만하게 한다.
+    effective_steps = min(steps_ahead, TREND_SATURATION_STEPS)
+    projected = last_value + slope * effective_steps
 
     # 노이즈: 표준편차의 25% 수준으로 자연스러운 변주(완전 직선이 아니게)
     noise_scale = std * 0.25 if std > 0 else abs(mean) * 0.03
@@ -166,9 +174,11 @@ def _project_value(history, steps_ahead, field_name):
         hi = max(values) * 1.15
         projected = max(lo, min(hi, projected))
     else:
-        # 금액/수량류는 음수 방지
+        # 금액/수량류는 음수 방지 + 이력이 유의미하게 양수였다면 완전히 0으로
+        # 주저앉지 않도록 과거 최소값의 절반을 최소 하한으로 둔다.
         if min(values) >= 0:
-            projected = max(0, projected)
+            floor = min(values) * 0.5 if mean > 0 else 0
+            projected = max(floor, projected)
 
     return projected
 
