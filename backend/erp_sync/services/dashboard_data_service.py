@@ -407,6 +407,26 @@ class DashboardDataService:
                 for name, s in inspector_stats.items()
             ]
 
+            # 검사 유형(공정)별 수율 - 재검사 이력을 별도로 추적하지 않아 FPY는 수율과 동일하게 근사
+            type_labels = {
+                'incoming': '수입검사', 'in_process': '공정검사',
+                'final': '최종검사', 'outgoing': '출하검사',
+            }
+            type_stats = {}
+            for r in rows:
+                stat = type_stats.setdefault(r.inspection_type, {'total': 0, 'pass': 0})
+                stat['total'] += 1
+                if r.result == 'pass':
+                    stat['pass'] += 1
+            yield_by_process = [
+                {
+                    'process': type_labels.get(t, t),
+                    'yield_rate': round(s['pass'] / s['total'] * 100, 1) if s['total'] else 0,
+                    'fpy_rate': round(s['pass'] / s['total'] * 100, 1) if s['total'] else 0,
+                }
+                for t, s in type_stats.items()
+            ]
+
             data = {
                 'date': date_str,
                 'inspect_count': inspect_count,
@@ -418,6 +438,7 @@ class DashboardDataService:
                 'customer_claim_count': max(0, fail_count // 5),
                 'top_defects': top_defects,
                 'inspector_performance': inspector_performance,
+                'yield_by_process': yield_by_process,
                 'claim_cost': fail_count * 700000,
                 'data_source': 'local_augmented',
             }
@@ -456,6 +477,20 @@ class DashboardDataService:
             for i in items:
                 by_category[i.category] = by_category.get(i.category, 0) + float(i.stock_value)
 
+            # 부진재고 상위 5개: 회전율이 낮을수록(재고일수가 길수록) 부진
+            slow_moving_sorted = sorted(items, key=lambda i: float(i.turnover_rate))[:5]
+            slow_moving_details = [
+                {
+                    'item_code': i.item_code,
+                    'item_name': i.item_name,
+                    'current_stock': i.current_stock,
+                    'stock_value': int(float(i.stock_value)),
+                    'turnover_rate': float(i.turnover_rate),
+                    'days_of_supply': round(365 / float(i.turnover_rate), 0) if float(i.turnover_rate) > 0 else 999,
+                }
+                for i in slow_moving_sorted
+            ]
+
             data = {
                 'asof_date': asof_date,
                 'total_items': len(items),
@@ -472,6 +507,7 @@ class DashboardDataService:
                 'warehouses': [
                     {'code': cat, 'value': int(val)} for cat, val in by_category.items()
                 ],
+                'slow_moving_details': slow_moving_details,
                 'data_source': 'local_augmented',
             }
 

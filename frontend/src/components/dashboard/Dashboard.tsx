@@ -26,38 +26,40 @@ interface MonthlySales {
   achievement_rate: number;
 }
 
-interface DailyProduction {
-  production_date: string;
-  planned_quantity: number;
-  actual_quantity: number;
+// erp_sync/dashboard/production/ 응답 그대로 (일자별 개별 레코드가 아니라 조회일 기준 집계 1건)
+interface ProductionSummary {
+  plan_qty: number;
+  production_qty: number;
+  good_qty: number;
+  defect_qty: number;
+  yield_rate: number;
   achievement_rate: number;
+  oee_rate: number;
 }
 
-interface QualityInspection {
-  inspection_date: string;
+// erp_sync/dashboard/quality/ 응답 그대로
+interface QualitySummary {
+  inspect_count: number;
   pass_count: number;
   fail_count: number;
   pass_rate: number;
+  defect_rate: number;
+  yield_by_process: { process: string; yield_rate: number; fpy_rate: number }[];
 }
 
-interface ProcessCapability {
-  process_name: string;
-  yield_rate: number;
-  fpy_rate: number;
-}
-
-interface InventoryTurnover {
-  material_code: string;
-  material_name: string;
-  turnover_rate: number;
-}
-
-interface InventoryItem {
-  material_code: string;
-  material_name: string;
-  current_stock: number;
-  stock_value: number;
-  days_of_supply: number;
+// erp_sync/dashboard/inventory/ 응답 그대로
+interface InventorySummary {
+  total_items: number;
+  total_stock_value: number;
+  avg_stock_days: number; // 실제로는 평균 회전율(turnover_rate) 값
+  warehouses: { code: string; value: number }[]; // 재고 등급(A/B/C)별 재고가치
+  slow_moving_details: {
+    item_code: string;
+    item_name: string;
+    stock_value: number;
+    turnover_rate: number;
+    days_of_supply: number;
+  }[];
 }
 
 interface Alert {
@@ -86,11 +88,9 @@ const Dashboard: React.FC = () => {
 
   // Data states
   const [monthlySales, setMonthlySales] = useState<MonthlySales[]>([]);
-  const [dailyProduction, setDailyProduction] = useState<DailyProduction[]>([]);
-  const [qualityInspections, setQualityInspections] = useState<QualityInspection[]>([]);
-  const [processCapabilities, setProcessCapabilities] = useState<ProcessCapability[]>([]);
-  const [turnover, setTurnover] = useState<InventoryTurnover[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [productionSummary, setProductionSummary] = useState<ProductionSummary | null>(null);
+  const [qualitySummary, setQualitySummary] = useState<QualitySummary | null>(null);
+  const [inventorySummary, setInventorySummary] = useState<InventorySummary | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [kpiPerformance, setKpiPerformance] = useState<KPIPerformance[]>([]);
 
@@ -103,45 +103,56 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // ERP 매핑 데이터 서비스를 사용하여 경영진단 요약 데이터 조회
-      const executiveSummaryRes = await dashboardDataService.dashboard.getExecutiveSummary({
-        period_type: 'monthly',
-        period_value: '2024-12'
-      });
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
 
-      // 각 세부 대시보드 데이터도 병렬 조회
-      const salesRes = await dashboardDataService.dashboard.getSalesDashboard({
-        date: new Date().toISOString().split('T')[0]
-      });
-      const productionRes = await dashboardDataService.dashboard.getProductionDashboard({
-        date: new Date().toISOString().split('T')[0]
-      });
-      const qualityRes = await dashboardDataService.dashboard.getQualityDashboard({
-        date: new Date().toISOString().split('T')[0]
-      });
-      const inventoryRes = await dashboardDataService.dashboard.getInventoryDashboard({
-        asof_date: new Date().toISOString().split('T')[0]
-      });
-
-      // 경영진단 요약 데이터 설정
-      if (executiveSummaryRes.results && executiveSummaryRes.results.length > 0) {
-        const summary = executiveSummaryRes.results[0];
-        // 기존 Interface에 맞춰어 데이터 변환
-        setMonthlySales([{
-          fiscal_year: 2024,
-          fiscal_month: 12,
-          target_amount: summary.total_sales * 0.9,  // 목표는 실적의 90%로 설정
-          actual_amount: summary.total_sales,
-          achievement_rate: 104.0
-        }]);
+      // 최근 3개월(이번 달 포함) 경영진단 요약을 병렬 조회해 매출 추이로 사용
+      const periods: string[] = [];
+      for (let i = 2; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        periods.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
       }
 
-      // 기존 데이터 설정 (임시)
-      setDailyProduction([]);
-      setQualityInspections([]);
-      setProcessCapabilities([]);
-      setTurnover([]);
-      setInventory([]);
+      const [summaryResults, productionRes, qualityRes, inventoryRes] = await Promise.all([
+        Promise.all(periods.map(period_value =>
+          dashboardDataService.dashboard.getExecutiveSummary({ period_type: 'monthly', period_value })
+        )),
+        dashboardDataService.dashboard.getProductionDashboard({ date: todayStr }),
+        dashboardDataService.dashboard.getQualityDashboard({ date: todayStr }),
+        dashboardDataService.dashboard.getInventoryDashboard({ asof_date: todayStr }),
+      ]);
+
+      // 최근 3개월 매출 추이 설정 (목표치는 API에 없어 실적의 90%로 근사,
+      // 달성률은 그 근사 목표 대비 실적이므로 모든 달이 항상 111.1% 부근으로 나옴 - 근사치 한계)
+      const monthly = summaryResults
+        .map((res, idx) => {
+          if (!res.results || res.results.length === 0) return null;
+          const summary = res.results[0];
+          const [fy, fm] = periods[idx].split('-').map(Number);
+          const target = summary.total_sales * 0.9;
+          const actual = summary.total_sales;
+          return {
+            fiscal_year: fy,
+            fiscal_month: fm,
+            target_amount: target,
+            actual_amount: actual,
+            achievement_rate: target > 0 ? Math.round((actual / target) * 1000) / 10 : 0,
+          };
+        })
+        .filter((v): v is MonthlySales => v !== null);
+      setMonthlySales(monthly);
+
+      if (productionRes.results && productionRes.results.length > 0) {
+        setProductionSummary(productionRes.results[0]);
+      }
+      if (qualityRes.results && qualityRes.results.length > 0) {
+        setQualitySummary(qualityRes.results[0]);
+      }
+      if (inventoryRes.results && inventoryRes.results.length > 0) {
+        setInventorySummary(inventoryRes.results[0]);
+      }
+
+      // 알림/KPI 성과표는 전용 API가 아직 없어 아래 KPI 카드 값을 기반으로 화면단에서 파생
       setAlerts([]);
       setKpiPerformance([]);
 
@@ -160,97 +171,73 @@ const Dashboard: React.FC = () => {
     }
     const latest = monthlySales[monthlySales.length - 1];
     const previous = monthlySales.length > 1 ? monthlySales[monthlySales.length - 2] : null;
-    const latestRate = Number(latest.achievement_rate) || 0;
-    const previousRate = previous ? (Number(previous.achievement_rate) || 0) : 0;
-    const change = previousRate > 0
-      ? ((latestRate - previousRate) / previousRate * 100)
+    const latestActual = Number(latest.actual_amount) || 0;
+    const previousActual = previous ? (Number(previous.actual_amount) || 0) : 0;
+    // 목표는 실적의 90% 근사치라 달성률 자체는 매달 거의 동일 -> 변화율은 실제 매출 증감으로 표시
+    const change = previousActual > 0
+      ? ((latestActual - previousActual) / previousActual * 100)
       : 0;
     return {
-      achievement: latestRate,
+      achievement: Number(latest.achievement_rate) || 0,
       target: Number(latest.target_amount) || 0,
-      actual: Number(latest.actual_amount) || 0,
+      actual: latestActual,
       change: Math.round(change * 10) / 10
     };
   };
 
   const getProductionKPI = () => {
-    if (dailyProduction.length === 0) {
+    if (!productionSummary) {
       return { achievement: 0, planned: 0, actual: 0, change: 0 };
     }
-    const recent = dailyProduction.slice(-7);
-    const totalPlanned = recent.reduce((sum, p) => sum + (p.planned_quantity ?? 0), 0);
-    const totalActual = recent.reduce((sum, p) => sum + (p.actual_quantity ?? 0), 0);
-    const achievement = totalPlanned > 0 ? (totalActual / totalPlanned * 100) : 0;
-
-    // Compare with previous period
-    const prev = dailyProduction.slice(-14, -7);
-    const prevPlanned = prev.reduce((sum, p) => sum + (p.planned_quantity ?? 0), 0);
-    const prevActual = prev.reduce((sum, p) => sum + (p.actual_quantity ?? 0), 0);
-    const prevAchievement = prevPlanned > 0 ? (prevActual / prevPlanned * 100) : 0;
-    const change = prevAchievement > 0 ? ((achievement - prevAchievement) / prevAchievement * 100) : 0;
-
     return {
-      achievement: Math.round(achievement * 10) / 10,
-      planned: totalPlanned,
-      actual: totalActual,
-      change: Math.round(change * 10) / 10
+      achievement: Math.round((productionSummary.achievement_rate ?? 0) * 10) / 10,
+      planned: productionSummary.plan_qty ?? 0,
+      actual: productionSummary.production_qty ?? 0,
+      change: Math.round(((productionSummary.oee_rate ?? 0) - (productionSummary.achievement_rate ?? 0)) * 10) / 10,
     };
   };
 
   const getQualityKPI = () => {
-    if (qualityInspections.length === 0) {
+    if (!qualitySummary) {
       return { passRate: 0, target: 95, change: 0 };
     }
-    const recent = qualityInspections.slice(-30);
-    const totalPass = recent.reduce((sum, i) => sum + (i.pass_count ?? 0), 0);
-    const totalFail = recent.reduce((sum, i) => sum + (i.fail_count ?? 0), 0);
-    const total = totalPass + totalFail;
-    const passRate = total > 0 ? (totalPass / total * 100) : 0;
-
-    // Previous period
-    const prev = qualityInspections.slice(-60, -30);
-    const prevPass = prev.reduce((sum, i) => sum + (i.pass_count ?? 0), 0);
-    const prevFail = prev.reduce((sum, i) => sum + (i.fail_count ?? 0), 0);
-    const prevTotal = prevPass + prevFail;
-    const prevRate = prevTotal > 0 ? (prevPass / prevTotal * 100) : 0;
-    const change = prevRate > 0 ? ((passRate - prevRate) / prevRate * 100) : 0;
-
     return {
-      passRate: Math.round(passRate * 10) / 10,
+      passRate: Math.round((qualitySummary.pass_rate ?? 0) * 10) / 10,
       target: 95,
-      change: Math.round(change * 10) / 10
+      change: Math.round(((qualitySummary.pass_rate ?? 0) - 95) * 10) / 10,
     };
   };
 
   const getTurnoverKPI = () => {
-    if (turnover.length === 0) {
+    if (!inventorySummary) {
       return { avgTurnover: 0, target: 8, change: 0 };
     }
-    const avgTurnover = turnover.reduce((sum, t) => sum + (t.turnover_rate ?? 0), 0) / turnover.length;
+    // avg_stock_days 필드는 실제로는 품목별 turnover_rate의 평균값
+    const avgTurnover = inventorySummary.avg_stock_days ?? 0;
     return {
       avgTurnover: Math.round(avgTurnover * 10) / 10,
       target: 8,
-      change: 0.8 // Static change for now
+      change: Math.round((avgTurnover - 8) * 10) / 10,
     };
   };
 
-  // Get worst inventory (slow-moving)
+  // Get worst inventory (slow-moving) - 백엔드가 이미 회전율 최하위 5개를 계산해서 내려줌
   const getWorstInventory = () => {
-    const sorted = [...inventory]
-      .filter(item => item.days_of_supply > 30)
-      .sort((a, b) => b.days_of_supply - a.days_of_supply)
-      .slice(0, 5);
+    if (!inventorySummary || inventorySummary.slow_moving_details.length === 0) {
+      return [];
+    }
+    const totalValue = inventorySummary.slow_moving_details.reduce((s, i) => s + (i.stock_value ?? 0), 1);
 
-    return sorted.map((item, idx) => {
+    return inventorySummary.slow_moving_details.map(item => {
       let theme = 'blue';
       if (item.days_of_supply > 90) theme = 'red';
       else if (item.days_of_supply > 60) theme = 'orange';
       else if (item.days_of_supply > 45) theme = 'yellow';
 
       return {
-        code: item.material_code,
+        code: item.item_code,
         day: `${item.days_of_supply}일`,
-        pct: `${Math.round(item.stock_value / inventory.reduce((s, i) => s + (i.stock_value ?? 0), 1) * 100)}%`,
+        pct: `${Math.round((item.stock_value / totalValue) * 100)}%`,
         amt: `${(item.stock_value / 100000000).toFixed(1)}억`,
         theme
       };
@@ -283,51 +270,34 @@ const Dashboard: React.FC = () => {
     };
   };
 
-  // Get inventory chart data
+  // Get inventory chart data - 재고 등급(A/B/C)별 현재 재고가치 스냅샷
+  // (일별/월별 재고가치 이력은 별도로 집계하지 않아 시계열 추이 대신 현재 스냅샷을 보여줌)
   const getInventoryChartData = () => {
-    // Group inventory by type (假设有type字段，如果没有用material_code前缀分类)
-    const grouped = inventory.reduce((acc, item) => {
-      const type = item.material_code?.startsWith('RM') ? '원자재'
-        : item.material_code?.startsWith('WIP') ? '재공품'
-        : '완제품';
-      if (!acc[type]) acc[type] = [];
-      acc[type].push(item.stock_value ?? 0);
-      return acc;
-    }, {} as Record<string, number[]>);
-
-    // Mock 3-month trend if not enough data
-    const labels = ['8월', '9월', '10월'];
-    const colors = {
-      '원자재': { border: '#a855f7', bg: 'rgba(168,85,247,0.1)' },
-      '재공품': { border: '#c084fc', bg: 'rgba(192,132,252,0.1)' },
-      '완제품': { border: '#d8b4fe', bg: 'rgba(216,180,254,0.1)' }
-    };
-
-    const datasets = Object.entries(colors).map(([type, color]) => {
-      const values = grouped[type] || [];
-      const sum = values.reduce((s, v) => s + v, 0) / 100000000;
-      // Create mock trend
-      const data = [
-        Math.round((sum * 0.95) * 10) / 10,
-        Math.round((sum * 0.98) * 10) / 10,
-        Math.round(sum * 10) / 10
-      ];
+    const warehouses = inventorySummary?.warehouses;
+    if (!warehouses || warehouses.length === 0) {
       return {
-        label: type,
-        data,
-        borderColor: color.border,
-        backgroundColor: color.bg,
-        fill: true,
-        tension: 0.3
+        labels: [],
+        datasets: [{ label: '재고가치(억원)', data: [], backgroundColor: 'rgba(168,85,247,0.6)' }]
       };
-    });
+    }
 
-    return { labels, datasets };
+    return {
+      labels: warehouses.map(w => `${w.code}등급`),
+      datasets: [
+        {
+          label: '재고가치(억원)',
+          data: warehouses.map(w => Math.round((w.value / 100000000) * 10) / 10),
+          backgroundColor: 'rgba(168,85,247,0.6)',
+          borderColor: '#a855f7',
+        }
+      ]
+    };
   };
 
   // Get quality by process chart data
   const getQualityChartData = () => {
-    if (processCapabilities.length === 0) {
+    const byProcess = qualitySummary?.yield_by_process ?? [];
+    if (byProcess.length === 0) {
       return {
         labels: [],
         datasets: [
@@ -337,16 +307,11 @@ const Dashboard: React.FC = () => {
       };
     }
 
-    const processes = processCapabilities.slice(0, 5);
-    const labels = processes.map(p => p.process_name);
-    const yields = processes.map(p => p.yield_rate ?? 0);
-    const fpy = processes.map(p => p.fpy_rate ?? 0);
-
     return {
-      labels,
+      labels: byProcess.map(p => p.process),
       datasets: [
-        { label: '수율', data: yields, backgroundColor: '#4ade80' },
-        { label: 'FPY', data: fpy, backgroundColor: '#22c55e' }
+        { label: '수율', data: byProcess.map(p => p.yield_rate ?? 0), backgroundColor: '#4ade80' },
+        { label: 'FPY', data: byProcess.map(p => p.fpy_rate ?? 0), backgroundColor: '#22c55e' }
       ]
     };
   };
