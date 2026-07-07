@@ -110,7 +110,6 @@ class ERPTableMappingSerializer(serializers.ModelSerializer):
 class ERPTableMappingDetailSerializer(ERPTableMappingSerializer):
     """ERP 테이블 매핑 상세 시리얼라이저"""
     field_mappings = ERPFieldMappingSerializer(
-        source='field_mappings',
         many=True,
         read_only=True
     )
