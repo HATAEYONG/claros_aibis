@@ -280,19 +280,19 @@ const KPIManagementPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <p className="text-sm text-gray-500 dark:text-gray-400">총 팩트 수</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.total_facts}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.total_facts || 0}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <p className="text-sm text-gray-500 dark:text-gray-400">양호</p>
-            <p className="text-2xl font-bold text-green-600">{summary.status_distribution.good || 0}</p>
+            <p className="text-2xl font-bold text-green-600">{summary.status_distribution?.good || 0}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <p className="text-sm text-gray-500 dark:text-gray-400">주의</p>
-            <p className="text-2xl font-bold text-yellow-600">{summary.status_distribution.warning || 0}</p>
+            <p className="text-2xl font-bold text-yellow-600">{summary.status_distribution?.warning || 0}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <p className="text-sm text-gray-500 dark:text-gray-400">위험</p>
-            <p className="text-2xl font-bold text-red-600">{summary.status_distribution.critical || 0}</p>
+            <p className="text-2xl font-bold text-red-600">{summary.status_distribution?.critical || 0}</p>
           </div>
         </div>
       )}

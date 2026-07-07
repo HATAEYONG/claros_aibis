@@ -84,6 +84,7 @@ export interface BatchOperationResult {
   updated?: number;
   deleted?: number;
   failed?: number;
+  saved?: number;
   total?: number;
   results?: any[];
   errors?: any[];
@@ -109,23 +110,19 @@ export interface KPISummary {
 // KPI 정의 API
 export const kpiDefinitionAPI = {
   getKPIDefinitions: async (params?: Record<string, any>): Promise<PaginatedResponse<KPIDefinition>> => {
-    const response = await api.get('/api/data-hub/analytics/definitions/', { params });
-    return response.data;
+    return await api.get('/api/data-hub/analytics/definitions/', { params });
   },
 
   getKPIDefinition: async (kpiId: number): Promise<KPIDefinition> => {
-    const response = await api.get(`/api/data-hub/analytics/definitions/${kpiId}/`);
-    return response.data;
+    return await api.get(`/api/data-hub/analytics/definitions/${kpiId}/`);
   },
 
   createKPIDefinition: async (kpi: Partial<KPIDefinition>): Promise<KPIDefinition> => {
-    const response = await api.post('/api/data-hub/analytics/definitions/', kpi);
-    return response.data;
+    return await api.post('/api/data-hub/analytics/definitions/', kpi);
   },
 
   updateKPIDefinition: async (kpiId: number, kpi: Partial<KPIDefinition>): Promise<KPIDefinition> => {
-    const response = await api.put(`/api/data-hub/analytics/definitions/${kpiId}/`, kpi);
-    return response.data;
+    return await api.put(`/api/data-hub/analytics/definitions/${kpiId}/`, kpi);
   },
 
   deleteKPIDefinition: async (kpiId: number): Promise<void> => {
@@ -133,18 +130,15 @@ export const kpiDefinitionAPI = {
   },
 
   getCategories: async (): Promise<{ categories: Record<string, string> }> => {
-    const response = await api.get('/api/data-hub/analytics/definitions/categories/');
-    return response.data;
+    return await api.get('/api/data-hub/analytics/definitions/categories/');
   },
 
   getRegistry: async (): Promise<{ registry: Record<string, any> }> => {
-    const response = await api.get('/api/data-hub/analytics/definitions/registry/');
-    return response.data;
+    return await api.get('/api/data-hub/analytics/definitions/registry/');
   },
 
   syncRegistry: async (): Promise<BatchOperationResult> => {
-    const response = await api.post('/api/data-hub/analytics/definitions/sync_registry/');
-    return response.data;
+    return await api.post('/api/data-hub/analytics/definitions/sync_registry/', {});
   },
 
   bulkCalculate: async (request: {
@@ -155,56 +149,26 @@ export const kpiDefinitionAPI = {
     line?: string;
     department?: string;
   }): Promise<BatchOperationResult> => {
-    const response = await api.post('/api/data-hub/analytics/definitions/bulk_calculate/', request);
-    return response.data;
-  },
-
-  exportCSV: async (params?: Record<string, any>): Promise<Blob> => {
-    const response = await api.get('/api/data-hub/analytics/definitions/export/csv/', {
-      params,
-      responseType: 'blob'
-    });
-    return response.data;
-  },
-
-  exportExcel: async (params?: Record<string, any>): Promise<Blob> => {
-    const response = await api.get('/api/data-hub/analytics/definitions/export/excel/', {
-      params,
-      responseType: 'blob'
-    });
-    return response.data;
-  },
-
-  importCSV: async (file: File): Promise<BatchOperationResult> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await api.post('/api/data-hub/analytics/definitions/import/csv/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    return response.data;
+    return await api.post('/api/data-hub/analytics/definitions/bulk_calculate/', request);
   },
 };
 
 // KPI 팩트 API
 export const kpiFactAPI = {
   getKPIFacts: async (params?: Record<string, any>): Promise<PaginatedResponse<KPIFact>> => {
-    const response = await api.get('/api/data-hub/analytics/facts/', { params });
-    return response.data;
+    return await api.get('/api/data-hub/analytics/facts/', { params });
   },
 
   getKPIFact: async (factId: string): Promise<KPIFact> => {
-    const response = await api.get(`/api/data-hub/analytics/facts/${factId}/`);
-    return response.data;
+    return await api.get(`/api/data-hub/analytics/facts/${factId}/`);
   },
 
   createKPIFact: async (fact: Partial<KPIFact>): Promise<KPIFact> => {
-    const response = await api.post('/api/data-hub/analytics/facts/', fact);
-    return response.data;
+    return await api.post('/api/data-hub/analytics/facts/', fact);
   },
 
   updateKPIFact: async (factId: string, fact: Partial<KPIFact>): Promise<KPIFact> => {
-    const response = await api.put(`/api/data-hub/analytics/facts/${factId}/`, fact);
-    return response.data;
+    return await api.put(`/api/data-hub/analytics/facts/${factId}/`, fact);
   },
 
   deleteKPIFact: async (factId: string): Promise<void> => {
@@ -216,8 +180,7 @@ export const kpiFactAPI = {
     plant?: string;
     limit?: number;
   }): Promise<{ count: number; results: KPIFact[] }> => {
-    const response = await api.get('/api/data-hub/analytics/facts/latest/', { params });
-    return response.data;
+    return await api.get('/api/data-hub/analytics/facts/latest/', { params });
   },
 
   getSummary: async (params?: {
@@ -225,24 +188,7 @@ export const kpiFactAPI = {
     quarter?: number;
     month?: number;
   }): Promise<KPISummary> => {
-    const response = await api.get('/api/data-hub/analytics/facts/summary/', { params });
-    return response.data;
-  },
-
-  exportCSV: async (params?: Record<string, any>): Promise<Blob> => {
-    const response = await api.get('/api/data-hub/analytics/facts/export/csv/', {
-      params,
-      responseType: 'blob'
-    });
-    return response.data;
-  },
-
-  exportExcel: async (params?: Record<string, any>): Promise<Blob> => {
-    const response = await api.get('/api/data-hub/analytics/facts/export/excel/', {
-      params,
-      responseType: 'blob'
-    });
-    return response.data;
+    return await api.get('/api/data-hub/analytics/facts/summary/', { params });
   },
 };
 

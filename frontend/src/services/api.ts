@@ -157,8 +157,21 @@ class ApiService {
   }
 
   // Generic CRUD methods
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint);
+  async get<T>(endpoint: string, options?: { params?: Record<string, any> }): Promise<T> {
+    let url = endpoint;
+    if (options?.params) {
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(options.params)) {
+        if (value !== undefined && value !== null && value !== '') {
+          query.append(key, String(value));
+        }
+      }
+      const queryString = query.toString();
+      if (queryString) {
+        url += (endpoint.includes('?') ? '&' : '?') + queryString;
+      }
+    }
+    return this.request<T>(url);
   }
 
   async post<T>(endpoint: string, data: unknown): Promise<T> {
